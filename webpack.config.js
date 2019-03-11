@@ -6,7 +6,7 @@ module.exports = {
     },
     output: {
         path: path.resolve(__dirname, 'dist/'),
-        filename: '[_name]',
+        filename: '[name]',
         libraryTarget: 'commonjs2',
     },
     resolve: {
