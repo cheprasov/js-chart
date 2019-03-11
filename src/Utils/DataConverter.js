@@ -1,4 +1,4 @@
-import type { ChartLineType, ChartObjectType } from '../Chart/SimpleChart';
+import type { ChartLineType, ChartDataType } from '../Chart/SimpleChart';
 
 const CHART_DATA_TYPE_X = 'x';
 const CHART_DATA_TYPE_LINE = 'line';
@@ -17,7 +17,7 @@ export type RawChartDataType = {
 
 export default class DataConverter {
 
-    static prepareChartData(rawChartData: RawChartDataType): null | ChartObjectType {
+    static prepareChartData(rawChartData: RawChartDataType): null | ChartDataType {
         if (!rawChartData || !rawChartData.types || !rawChartData.columns) {
             return null;
         }
@@ -28,7 +28,7 @@ export default class DataConverter {
         }
 
         const chartLines: ChartLineType[] = [];
-        const chartObjects: ChartObjectType = {
+        const chartObjects: ChartDataType = {
             lines: chartLines,
             minValue: Infinity,
             maxValue: -Infinity,
@@ -38,7 +38,7 @@ export default class DataConverter {
             const type = rawChartData.types[key];
 
             if (type === CHART_DATA_TYPE_LINE) {
-                const lineData: ChartLineType = this.createLineObject(rawChartData, key, data);
+                const lineData: ChartLineType = this.createLine(rawChartData, key, data);
                 chartObjects.lines.push(lineData);
                 chartObjects.minValue = Math.min(chartObjects.minValue, lineData.minValue);
                 chartObjects.maxValue = Math.max(chartObjects.maxValue, lineData.maxValue);
@@ -59,7 +59,7 @@ export default class DataConverter {
         return `#${rgb.join('')}`;
     }
 
-    static createLineObject(rawChartData: RawChartDataType, key: string, values: number): ChartLineType {
+    static createLine(rawChartData: RawChartDataType, key: string, values: number): ChartLineType {
         const line: ChartLineType = {
             key,
             values,

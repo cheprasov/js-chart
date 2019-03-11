@@ -10,13 +10,13 @@ export default class DocumentHelper {
     }
 
     static addClass(element: HTMLElement, classes: string|string[]): Promise {
-        return this.update(() => {
+        //return this.update(() => {
             if (Array.isArray(classes)) {
                 element.classList.add(...classes);
             } else {
                 element.classList.add(classes);
             }
-        });
+        //});
     }
 
     static removeClass(element: HTMLElement, classes: string|string[]): Promise {

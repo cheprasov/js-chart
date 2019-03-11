@@ -1,4 +1,4 @@
-import type { ChartLineType, ChartObjectType } from '../Chart/SimpleChart';
+import type { ChartLineType, ChartDataType } from '../Chart/SimpleChart';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -31,7 +31,7 @@ export default class SVGHelper {
         return polyline;
     }
 
-    static createSVGBox(chartData: ChartObjectType, width: number, height: number) {
+    static createSVGBox(chartData: ChartDataType, width: number, height: number) {
         const svg = this.createNode('svg', { viewBox: `0 0 ${width} ${height}` });
 
         chartData.lines.forEach((chartLine: ChartLineType) => {
