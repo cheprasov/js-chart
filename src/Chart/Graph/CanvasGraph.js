@@ -1,29 +1,42 @@
 // @flow
 
+import WebAnimation from '@cheprasov/web-animation';
 import DisplayUtils from '../../Utils/DisplayUtils';
 
 import type { GraphInterface } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
+type ScopeType = {
+    maxValue: ?number,
+    minValue: ?number,
+    scaleX: ?number,
+    scaleY: ?number,
+}
+
+type LineDataType = {
+    scope: ScopeType,
+    opacity: number,
+};
+
+type LineDataMapType = {
+    [string]: LineDataType,
+};
+
 type OptionsType = {
     devicePixelRatio?: number,
     width: number,
     height: number,
-}
-
-type BoundsType = {
-    max: ?number,
-    min: ?number,
-    scaleX: ?number,
-    scaleY: ?number,
+    verticalPaddingRatio: number,
+    animationDuration: number,
 }
 
 const DEFAULT_CONSTRUCTOR_PARAMS = {
     devicePixelRatio: DisplayUtils.getDevicePixelRatio(),
     width: 100,
     height: 50,
-    verticalPaddingRatio: 0.9,
+    verticalPaddingRatio: 0.8,
+    animationDuration: 200,
 };
 
 export default class GraphCanvas implements GraphInterface {
@@ -39,7 +52,14 @@ export default class GraphCanvas implements GraphInterface {
     _canvasWidth: number;
     _canvasHeight: number;
 
-    _visibilityMap: { [string]: boolean } = {};
+    _verticalPadding: number;
+
+    _visibilityMap: VisibilityMapType = {};
+
+    // separate scope for each line is because different animation on task mock
+    _lineDataMap: LineDataMapType = {};
+
+    _animation: ?WebAnimation;
 
     constructor(chartData: ChartDataType, options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
@@ -51,24 +71,39 @@ export default class GraphCanvas implements GraphInterface {
 
         this._canvasWidth = Math.round(this._devicePixelRatio * this._width);
         this._canvasHeight = Math.round(this._devicePixelRatio * this._height);
+        this._verticalPadding = this._canvasHeight * (1 - this._verticalPaddingRatio) / 2;
+
+        this._animation = new WebAnimation({ duration: params.animationDuration });
 
         this._initCanvas();
         this._initData();
-        this._initDraw();
+        this._draw();
     }
 
     _initCanvas() {
         this._canvas = document.createElement('canvas');
-        this._context = this._canvas.getContext('2d');
         this._canvas.width = this._canvasWidth;
         this._canvas.height = this._canvasHeight;
         this._canvas.style.width = `${this._width}px`;
         this._canvas.style.height = `${this._height}px`;
+
+        this._context = this._canvas.getContext('2d');
+        this._context.lineJoin = 'bevel';
+        this._context.lineCap = 'butt';
+        this._context.lineWidth = this._devicePixelRatio * 1.5;
     }
 
     _initData() {
         this._data.lines.forEach((chartLine: ChartLineType) => {
             this._visibilityMap[chartLine.key] = true;
+        });
+
+        const scope = this._getScope();
+        this._data.lines.forEach((chartLine: ChartLineType) => {
+            this._lineDataMap[chartLine.key] = {
+                scope: { ...scope },
+                opacity: 1,
+            };
         });
     }
 
@@ -76,8 +111,45 @@ export default class GraphCanvas implements GraphInterface {
         Object.keys(this._visibilityMap).forEach((key: string) => {
             this._visibilityMap[key] = !!visibilityMap[key];
         });
-        this._clear();
-        this._initDraw();
+        this._drawAnimation(this._getScope());
+    }
+
+    _drawAnimation(newScope: ScopeType) {
+        this._animation.stop();
+
+        const prevLineDataMap: LineDataMapType = {};
+        Object.entries(this._lineDataMap).forEach(([key, lineData]) => {
+            prevLineDataMap[key] = {
+                opacity: lineData.opacity,
+                scope: { ...lineData.scope },
+            };
+        });
+
+        this._animation.setOnStep((progress) => {
+            Object.entries(this._lineDataMap).forEach(([key, lineData]) => {
+                const isVisible = this._visibilityMap[key];
+                const oldOpacity: number = prevLineDataMap[key].opacity;
+                const oldScope = prevLineDataMap[key].scope;
+                if (isVisible) {
+                    if (oldOpacity) {
+                        lineData.scope = {
+                            maxValue: (newScope.maxValue - oldScope.maxValue) * progress.tween + oldScope.maxValue,
+                            minValue: (newScope.minValue - oldScope.minValue) * progress.tween + oldScope.minValue,
+                            scaleX: (newScope.scaleX - oldScope.scaleX) * progress.tween + oldScope.scaleX,
+                            scaleY: (newScope.scaleY - oldScope.scaleY) * progress.tween + oldScope.scaleY,
+                        };
+                    } else {
+                        lineData.scope = { ...newScope };
+                    }
+                }
+                const opacity = isVisible ? 1 : 0;
+                lineData.opacity = (opacity - oldOpacity) * progress.tween + oldOpacity;
+            });
+
+            this._clear();
+            this._draw();
+        });
+        this._animation.run();
     }
 
     _getVisibleLines(): ChartLineType[] {
@@ -86,31 +158,30 @@ export default class GraphCanvas implements GraphInterface {
         });
     }
 
-    _getBounds(): BoundsType {
-        const bounds = this._getVisibleLines().reduce((result: {}, chartLine: ChartLineType) => {
-            result.min = result.min === null ? chartLine.minValue : Math.min(result.min, chartLine.minValue);
-            result.max = result.max === null ? chartLine.maxValue : Math.max(result.max, chartLine.maxValue);
+    _getScope(): ScopeType {
+        const scope = this._getVisibleLines().reduce((result: {}, chartLine: ChartLineType) => {
+            result.minValue = result.minValue === null
+                ? chartLine.minValue
+                : Math.min(result.minValue, chartLine.minValue);
+            result.maxValue = result.maxValue === null
+                ? chartLine.maxValue
+                : Math.max(result.maxValue, chartLine.maxValue);
             return result;
-        }, {
-            max: null,
-            min: null,
-        });
-        bounds.scaleY = this._canvasHeight * this._verticalPaddingRatio / ((bounds.max - bounds.min) || 1);
-        bounds.scaleX = this._canvasWidth / Math.max(this._data.x.length - 1, 1);
+        }, { maxValue: null, minValue: null });
 
-        return bounds;
+        scope.scaleY = this._canvasHeight * this._verticalPaddingRatio / ((scope.maxValue - scope.minValue) || 1);
+        scope.scaleX = this._canvasWidth / Math.max(this._data.x.length - 1, 1);
+
+        return scope;
     }
 
     getGraphElement(): HTMLCanvasElement {
         return this._canvas;
     }
 
-    _initDraw(): void {
-        const bounds = this._getBounds();
+    _draw(): void {
         this._data.lines.forEach((chartLine: ChartLineType) => {
-            if (this._visibilityMap[chartLine.key]) {
-                this._drawLine(chartLine, bounds);
-            }
+            this._drawLine(chartLine);
         });
     }
 
@@ -118,19 +189,20 @@ export default class GraphCanvas implements GraphInterface {
         this._context.clearRect(0, 0, this._canvasWidth, this._canvasHeight);
     }
 
-    _drawLine(chartLine: ChartLineType, bounds: BoundsType) {
-        const context = this._context;
-        context.lineJoin = 'bevel';
-        context.lineCap = 'butt';
-        context.lineWidth = this._devicePixelRatio * 1.5;
-        context.strokeStyle = chartLine.color;
+    _drawLine(chartLine: ChartLineType) {
+        const lineData = this._lineDataMap[chartLine.key];
 
-        const verticalPadding = this._canvasHeight * (1 - this._verticalPaddingRatio) / 2;
+        const context = this._context;
+        context.save();
+        context.strokeStyle = chartLine.color;
+        context.globalAlpha = lineData.opacity;
 
         context.beginPath();
         chartLine.values.forEach((value: number, index: number) => {
-            const x = index * bounds.scaleX;
-            const y = this._canvasHeight - (value - bounds.min) * bounds.scaleY - verticalPadding;
+            const x = index * lineData.scope.scaleX;
+            const y = this._canvasHeight - this._verticalPadding - (value - lineData.scope.minValue)
+                * lineData.scope.scaleY;
+
             if (index) {
                 context.lineTo(x, y);
             } else {
@@ -138,6 +210,7 @@ export default class GraphCanvas implements GraphInterface {
             }
         });
         context.stroke();
+        context.restore();
     }
 
 }

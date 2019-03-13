@@ -9,7 +9,7 @@ type EventListenerType = {
 
 export default class BaseComponent implements BaseComponentInterface {
 
-    _registeredEventListeners: Function[] = [];
+    _registeredEventListeners: EventListenerType[] = [];
 
     destroy(): void {
         this.removeEventListeners();
