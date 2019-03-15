@@ -20,8 +20,6 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
         this._key = lineData.key;
         this._name = lineData.name;
         this._color = lineData.color;
-
-        this._onClick = this._onClick.bind(this);
     }
 
     setCallbackOnChangeVisibility(callback: Function): void {
@@ -56,9 +54,8 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
     render(container: HTMLElement): void {
         const divLegend: HTMLDivElement = document.createElement('div');
         divLegend.classList.add('ChartLegend-Item', 'checked');
-        this.addEventListener(divLegend, 'click', this._onClick);
-        // do not wait a click for feeling quick interaction
-        this.addEventListener(divLegend, 'touchstart', this._onClick);
+        // use touchstart for feeling quick interaction
+        this.addEventListener(divLegend, ['click', 'touchstart'], this._onClick.bind(this));
 
         const divIcon: HTMLDivElement = document.createElement('div');
         divIcon.classList.add('ChartLegend-Item-Icon');

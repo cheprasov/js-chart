@@ -2,14 +2,14 @@
 
 import GraphCanvas from '../Graph/CanvasGraph';
 import BaseComponent from '../Base/BaseComponent';
+import DocumentHelper from '../../Utils/DocumentHelper';
 
-import type { NavigationInterface } from './NavigationInterface';
-import type { ChartDataType } from '../Chart';
+import type { NavigationInterface, NavigationScopeType } from './NavigationInterface';
+import type { ChartDataType, ChartLineType } from '../Chart';
 import type { GraphInterface } from '../Graph/GraphInterface';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 import './Navigation.scss';
-import DocumentHelper from '../../Utils/DocumentHelper';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -45,20 +45,83 @@ export default class Navigation extends BaseComponent implements NavigationInter
     _moveScrollData: ?MoveScrollDataType;
 
     _scrollData: ScrollDataType = { left: 0, right: 0, center: 0, width: 0 };
+    _callbackOnChangeNavigationScope: Function = () => {};
+    _navigationScope: NavigationScopeType = {};
 
     constructor(chartData: ChartDataType) {
         super();
         this._data = chartData;
+        this._initData();
+    }
 
-        this._onTouchStartScroll = this._onTouchStartScroll.bind(this);
-        this._onTouchMoveScroll = this._onTouchMoveScroll.bind(this);
-        this._onTouchEndScroll = this._onTouchEndScroll.bind(this);
+    _initData() {
+        this._navigationScope = {
+            minValue: this._data.minValue,
+            maxValue: this._data.maxValue,
+            minX: 0,
+            maxY: this._data.x.length - 1,
+        };
+    }
+
+    _updateNavigationScope(visibilityMap: VisibilityMapType) {
+        //this._data.lines
     }
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
+        this._updateVerticalScope(visibilityMap);
+
         if (this._graph) {
+            this._graph.setVerticalScope({
+                minValue: this._navigationScope.minValue,
+                maxValue: this._navigationScope.maxValue,
+            });
             this._graph.setVisibilityMap(visibilityMap);
         }
+    }
+
+    setCallbackOnChangeNavigationScope(callback: Function): NavigationScopeType {
+        this._callbackOnChangeNavigationScope = callback;
+    }
+
+    getNavigationScope(): NavigationScopeType {
+        return { ...this._navigationScope };
+    }
+
+    _updateVerticalScope(visibilityMap: ?VisibilityMapType = null): void {
+        const verticalScope = this._data.lines.reduce((result: {}, chartLine: ChartLineType) => {
+            if (visibilityMap && !visibilityMap[chartLine.key]) {
+                // skip invisible lines
+                return result;
+            }
+
+            result.minValue = result.minValue === null
+                ? chartLine.minValue
+                : Math.min(result.minValue, chartLine.minValue);
+
+            result.maxValue = result.maxValue === null
+                ? chartLine.maxValue
+                : Math.max(result.maxValue, chartLine.maxValue);
+
+            return result;
+        }, { maxValue: null, minValue: null });
+
+        this._navigationScope.minValue = verticalScope.minValue;
+        this._navigationScope.maxValue = verticalScope.maxValue;
+        this._navigationScopeDidUpdate();
+    }
+
+    _updateHorizontalScope(): void {
+        this._navigationScope.minX = Math.round(
+            this._scrollData.left / this._scrollData.width * (this._data.x.length - 1),
+        );
+        this._navigationScope.maxX = Math.round(
+            (this._scrollData.width - this._scrollData.right) / this._scrollData.width * (this._data.x.length - 1),
+        );
+        this._navigationScopeDidUpdate();
+    }
+
+    _navigationScopeDidUpdate(): void {
+        this._callbackOnChangeNavigationScope(this.getNavigationScope());
     }
 
     render(container: HTMLElement) {
@@ -72,7 +135,12 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._scrollData.width = width;
         this._scrollData.minWidth = Math.round(width * SCROLL_CENTER_MIN_RATIO);
 
-        this._graph = new GraphCanvas(this._data, { width, height });
+        this._graph = new GraphCanvas(this._data, {
+            width,
+            height,
+            minValue: this._navigationScope.minValue,
+            maxValue: this._navigationScope.maxValue,
+        });
         const graphElement = this._graph.getGraphElement();
         graphElement.classList.add('Navigation-Graph');
         divNavigation.appendChild(graphElement);
@@ -110,8 +178,8 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this.addEventListener(divScroll, ['touchstart', 'mousedown'], (event: TouchEvent) => {
             this._onTouchStartScroll(event, MOVE_SCROLL_TYPE_CENTER);
         });
-        this.addEventListener(document, ['touchmove', 'mousemove'], this._onTouchMoveScroll);
-        this.addEventListener(document, ['touchend', 'touchcancel', 'mouseup'], this._onTouchEndScroll);
+        this.addEventListener(document, ['touchmove', 'mousemove'], this._onTouchMoveScroll.bind(this));
+        this.addEventListener(document, ['touchend', 'touchcancel', 'mouseup'], this._onTouchEndScroll.bind(this));
     }
 
     _onTouchStartScroll(event: TouchEvent, scrollType: MoveTypeType) {
@@ -156,61 +224,57 @@ export default class Navigation extends BaseComponent implements NavigationInter
         let isRightUpdated: boolean = false;
 
         if (this._moveScrollData.type === MOVE_SCROLL_TYPE_LEFT) {
-            this._scrollData.left = Math.min(
+            const left = Math.min(
                 Math.max(0, this._moveScrollData.data.left + shiftX),
                 this._moveScrollData.data.width - this._moveScrollData.data.right - this._moveScrollData.data.minWidth,
             );
-            isLeftUpdated = true;
+            if (this._scrollData.left !== left) {
+                this._scrollData.left = left;
+                isLeftUpdated = true;
+            }
         }
 
         if (this._moveScrollData.type === MOVE_SCROLL_TYPE_RIGHT) {
-            this._scrollData.right = Math.min(
+            const right = Math.min(
                 Math.max(0, this._moveScrollData.data.right - shiftX),
                 this._moveScrollData.data.width - this._moveScrollData.data.left - this._moveScrollData.data.minWidth,
             );
-            isRightUpdated = true;
+            if (this._scrollData.right !== right) {
+                this._scrollData.right = right;
+                isRightUpdated = true;
+            }
         }
 
         if (this._moveScrollData.type === MOVE_SCROLL_TYPE_CENTER) {
             const center = (this._moveScrollData.data.width - this._moveScrollData.data.left
                 - this._moveScrollData.data.right);
-            this._scrollData.left = Math.min(
+            const left = Math.min(
                 Math.max(0, this._moveScrollData.data.left + shiftX),
                 this._moveScrollData.data.width - center,
             );
-            this._scrollData.right = this._moveScrollData.data.width - this._scrollData.left - center;
-            isLeftUpdated = true;
-            isRightUpdated = true;
+            const right = this._moveScrollData.data.width - left - center;
+            if (this._scrollData.left !== left) {
+                this._scrollData.left = left;
+                this._scrollData.right = right;
+                isLeftUpdated = true;
+                isRightUpdated = true;
+            }
         }
 
-        DocumentHelper.update(() => {
-            if (isLeftUpdated) {
-                this._divShadowLeft.style.width = `${this._scrollData.left}px`;
-                this._divScroll.style.left = `${this._scrollData.left}px`;
-            }
-            if (isRightUpdated) {
-                this._divShadowRight.style.width = `${this._scrollData.right}px`;
-                this._divScroll.style.right = `${this._scrollData.right}px`;
-            }
-        });
-    }
+        if (isLeftUpdated || isRightUpdated) {
+            DocumentHelper.update(() => {
+                if (isLeftUpdated) {
+                    this._divShadowLeft.style.width = `${this._scrollData.left}px`;
+                    this._divScroll.style.left = `${this._scrollData.left}px`;
+                }
+                if (isRightUpdated) {
+                    this._divShadowRight.style.width = `${this._scrollData.right}px`;
+                    this._divScroll.style.right = `${this._scrollData.right}px`;
+                }
+            });
 
-    _updateScrollEdge(key1: string, key2: string, shiftX: number) {
-        const value = Math.min(
-            Math.max(0, this._moveScrollData.data[key1] + shiftX),
-            this._moveScrollData.data.width - this._moveScrollData.data[key2] - this._moveScrollData.data.minWidth,
-        );
-        this._scrollData[key1] = value;
-
-        DocumentHelper.update(() => {
-            if (key1 === 'left') {
-                this._divShadowLeft.style.width = `${value}px`;
-            }
-            if (key1 === 'right') {
-                this._divShadowRight.style.width = `${value}px`;
-            }
-            this._divScroll.style[key1] = `${value}px`;
-        });
+            this._updateHorizontalScope();
+        }
     }
 
     _onTouchEndScroll() {

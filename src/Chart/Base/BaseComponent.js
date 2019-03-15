@@ -15,7 +15,7 @@ export default class BaseComponent implements BaseComponentInterface {
         this.removeEventListeners();
     }
 
-    addEventListener(element: HTMLElement, types: string[], callback: Function): void {
+    addEventListener(element: HTMLElement, types: string | string[], callback: Function): void {
         const eventTypes = Array.isArray(types) ? types : [types];
         eventTypes.forEach((type: string) => {
             element.addEventListener(type, callback);

@@ -4,7 +4,7 @@ import Legend from './Legend/Legend';
 import Navigation from './Navigation/Navigation';
 
 import type { ChartInterface } from './ChartInterface';
-import type { NavigationInterface } from './Navigation/NavigationInterface';
+import type { NavigationInterface, NavigationScopeType } from './Navigation/NavigationInterface';
 import type { LegendInterface, VisibilityMapType } from './Legend/LegendInterface';
 
 import './Chart.scss';
@@ -42,14 +42,18 @@ export default class Chart implements ChartInterface {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
 
         this._chartLegend = new Legend(data);
-        this._chartNavigation = new Navigation(data);
+        this._chartLegend.setCallbackOnChangeVisibility(this._onChangeVisibility.bind(this));
 
-        this._onChangeVisibility = this._onChangeVisibility.bind(this);
-        this._chartLegend.setCallbackOnChangeVisibility(this._onChangeVisibility);
+        this._chartNavigation = new Navigation(data);
+        this._chartNavigation.setCallbackOnChangeNavigationScope(this._onChangeNavigationScope.bind(this));
     }
 
     _onChangeVisibility(visibilityMap: VisibilityMapType): void {
         this._chartNavigation.setVisibilityMap(visibilityMap);
+    }
+
+    _onChangeNavigationScope(navigationScope: NavigationScopeType): void {
+        console.log(navigationScope);
     }
 
     render(container: HTMLElement): void {

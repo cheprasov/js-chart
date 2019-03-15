@@ -3,11 +3,11 @@
 import WebAnimation from '@cheprasov/web-animation';
 import DisplayUtils from '../../Utils/DisplayUtils';
 
-import type { GraphInterface } from './GraphInterface';
+import type { GraphInterface, VerticalScopeType } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
-type ScopeType = {
+type GraphScopeType = {
     maxValue: ?number,
     minValue: ?number,
     scaleX: ?number,
@@ -15,7 +15,7 @@ type ScopeType = {
 }
 
 type LineDataType = {
-    scope: ScopeType,
+    scope: GraphScopeType,
     opacity: number,
 };
 
@@ -29,6 +29,8 @@ type OptionsType = {
     height: number,
     verticalPaddingRatio: number,
     animationDuration: number,
+    minValue: number,
+    maxValue: number,
 }
 
 const DEFAULT_CONSTRUCTOR_PARAMS = {
@@ -37,6 +39,8 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
     height: 50,
     verticalPaddingRatio: 0.1, // 20%
     animationDuration: 200,
+    minValue: 0,
+    maxValue: 0,
 };
 
 export default class GraphCanvas implements GraphInterface {
@@ -54,6 +58,7 @@ export default class GraphCanvas implements GraphInterface {
 
     _verticalPadding: number;
 
+    _verticalScope: VerticalScopeType;
     _visibilityMap: VisibilityMapType = {};
 
     // separate scope for each line is because different animation on task mock
@@ -63,11 +68,13 @@ export default class GraphCanvas implements GraphInterface {
 
     constructor(chartData: ChartDataType, options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
+
         this._data = chartData;
         this._devicePixelRatio = params.devicePixelRatio;
         this._width = params.width;
         this._height = params.height;
         this._verticalPaddingRatio = params.verticalPaddingRatio;
+        this._verticalScope = { minValue: params.minValue, maxValue: params.maxValue };
 
         this._canvasWidth = Math.round(this._devicePixelRatio * this._width);
         this._canvasHeight = Math.round(this._devicePixelRatio * this._height);
@@ -84,8 +91,6 @@ export default class GraphCanvas implements GraphInterface {
         this._canvas = document.createElement('canvas');
         this._canvas.width = this._canvasWidth;
         this._canvas.height = this._canvasHeight;
-        // this._canvas.style.width = `${this._width}px`;
-        // this._canvas.style.height = `${this._height}px`;
 
         this._context = this._canvas.getContext('2d');
         this._context.lineJoin = 'bevel';
@@ -98,7 +103,7 @@ export default class GraphCanvas implements GraphInterface {
             this._visibilityMap[chartLine.key] = true;
         });
 
-        const scope = this._getScope();
+        const scope = this._getGraphScope();
         this._data.lines.forEach((chartLine: ChartLineType) => {
             this._lineDataMap[chartLine.key] = {
                 scope: { ...scope },
@@ -107,14 +112,18 @@ export default class GraphCanvas implements GraphInterface {
         });
     }
 
+    setVerticalScope(verticalScope: VerticalScopeType): void {
+        this._verticalScope = verticalScope;
+    }
+
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
         Object.keys(this._visibilityMap).forEach((key: string) => {
             this._visibilityMap[key] = !!visibilityMap[key];
         });
-        this._drawAnimation(this._getScope());
+        this._drawAnimation(this._getGraphScope());
     }
 
-    _drawAnimation(newScope: ScopeType) {
+    _drawAnimation(newScope: GraphScopeType) {
         this._animation.stop();
 
         const prevLineDataMap: LineDataMapType = {};
@@ -158,21 +167,13 @@ export default class GraphCanvas implements GraphInterface {
         });
     }
 
-    _getScope(): ScopeType {
-        const scope = this._getVisibleLines().reduce((result: {}, chartLine: ChartLineType) => {
-            result.minValue = result.minValue === null
-                ? chartLine.minValue
-                : Math.min(result.minValue, chartLine.minValue);
-            result.maxValue = result.maxValue === null
-                ? chartLine.maxValue
-                : Math.max(result.maxValue, chartLine.maxValue);
-            return result;
-        }, { maxValue: null, minValue: null });
-
-        scope.scaleY = this._canvasHeight * (1 - this._verticalPaddingRatio) / ((scope.maxValue - scope.minValue) || 1);
-        scope.scaleX = this._canvasWidth / Math.max(this._data.x.length - 1, 1);
-
-        return scope;
+    _getGraphScope(): GraphScopeType {
+        return {
+            ...this._verticalScope,
+            scaleX: this._canvasWidth / Math.max(this._data.x.length - 1, 1),
+            scaleY: this._canvasHeight * (1 - this._verticalPaddingRatio)
+                / ((this._verticalScope.maxValue - this._verticalScope.minValue) || 1),
+        };
     }
 
     getGraphElement(): HTMLCanvasElement {

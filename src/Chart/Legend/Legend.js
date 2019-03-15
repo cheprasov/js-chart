@@ -29,10 +29,14 @@ export default class Legend implements LegendInterface {
     }
 
     getVisibilityMap(): VisibilityMapType {
-        return this._legendItems.reduce((map: {}, legendItem: LegendItemInterface) => {
-            map[legendItem.getKey()] = legendItem.isVisible();
-            return map;
-        }, {});
+        const visibilityMap: VisibilityMapType = this._legendItems.reduce(
+            (map: {}, legendItem: LegendItemInterface) => {
+                map[legendItem.getKey()] = legendItem.isVisible();
+                return map;
+            },
+            {},
+        );
+        return Object.freeze(visibilityMap);
     }
 
     render(container: HTMLElement) {
