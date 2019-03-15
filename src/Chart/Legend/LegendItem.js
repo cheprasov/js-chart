@@ -41,15 +41,14 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
 
         this._isChecked = !this._isChecked;
         if (this._isChecked) {
-            this.addClass(target, 'checked');
+            target.classList.add('checked');
         } else {
-            this.removeClass(target, 'checked');
+            target.classList.remove('checked');
         }
-
-        if (event instanceof TouchEvent) {
+        if (event.cancelable) {
             event.preventDefault();
-            event.stopPropagation();
         }
+        event.stopPropagation();
 
         this._callbackOnChangeVisibility();
     }

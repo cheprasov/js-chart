@@ -35,7 +35,7 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
     devicePixelRatio: DisplayUtils.getDevicePixelRatio(),
     width: 100,
     height: 50,
-    verticalPaddingRatio: 0.8,
+    verticalPaddingRatio: 0.1, // 20%
     animationDuration: 200,
 };
 
@@ -71,7 +71,7 @@ export default class GraphCanvas implements GraphInterface {
 
         this._canvasWidth = Math.round(this._devicePixelRatio * this._width);
         this._canvasHeight = Math.round(this._devicePixelRatio * this._height);
-        this._verticalPadding = this._canvasHeight * (1 - this._verticalPaddingRatio) / 2;
+        this._verticalPadding = this._canvasHeight * this._verticalPaddingRatio / 2;
 
         this._animation = new WebAnimation({ duration: params.animationDuration });
 
@@ -84,8 +84,8 @@ export default class GraphCanvas implements GraphInterface {
         this._canvas = document.createElement('canvas');
         this._canvas.width = this._canvasWidth;
         this._canvas.height = this._canvasHeight;
-        this._canvas.style.width = `${this._width}px`;
-        this._canvas.style.height = `${this._height}px`;
+        // this._canvas.style.width = `${this._width}px`;
+        // this._canvas.style.height = `${this._height}px`;
 
         this._context = this._canvas.getContext('2d');
         this._context.lineJoin = 'bevel';
@@ -169,7 +169,7 @@ export default class GraphCanvas implements GraphInterface {
             return result;
         }, { maxValue: null, minValue: null });
 
-        scope.scaleY = this._canvasHeight * this._verticalPaddingRatio / ((scope.maxValue - scope.minValue) || 1);
+        scope.scaleY = this._canvasHeight * (1 - this._verticalPaddingRatio) / ((scope.maxValue - scope.minValue) || 1);
         scope.scaleX = this._canvasWidth / Math.max(this._data.x.length - 1, 1);
 
         return scope;

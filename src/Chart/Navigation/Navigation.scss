@@ -1,5 +1,9 @@
 @import '../../constants';
 
+$navShadowColor: #ecf3f7;
+$navShadowOpacity: 0.85;
+$navBorderColor: rgba(90, 118, 156, 0.25);
+
 .Navigation {
   position: relative;
   display: block;
@@ -11,6 +15,53 @@
   &-Graph {
     width: 100%;
     height: 100%;
-    background-color: #e6ecf0;
+  }
+
+  &-Shadow-Left, &-Shadow-Right {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background-color: $navShadowColor;
+    opacity: $navShadowOpacity;
+  }
+
+  &-Shadow-Left {
+    left: 0;
+    width: 0;
+  }
+
+  &-Shadow-Right {
+    right: 0;
+    width: 0;
+  }
+
+  &-Scroll {
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: auto;
+    border-top: 2px solid $navBorderColor;
+    border-bottom: 2px solid $navBorderColor;
+    border-left: 6px solid $navBorderColor;
+    border-right: 6px solid $navBorderColor;
+
+    &-Left, &-Right {
+      cursor: ew-resize;
+      position: absolute;
+      top: 0;
+      width: 26px;
+      height: 100%;
+    }
+
+    &-Left {
+      left: -16px;
+    }
+
+    &-Right {
+      right: -16px;
+    }
   }
 }
