@@ -9,6 +9,7 @@ $navBorderColor: rgba(90, 118, 156, 0.25);
   display: block;
   width: 100%;
   height: 50px;
+  overflow: hidden;
   box-sizing: border-box;
   margin-bottom: $chartBlockMargin;
 
@@ -52,16 +53,26 @@ $navBorderColor: rgba(90, 118, 156, 0.25);
       cursor: ew-resize;
       position: absolute;
       top: 0;
-      width: 26px;
+      width: 16px;
       height: 100%;
     }
 
     &-Left {
-      left: -16px;
+      left: -11px;
+
+      &.TouchScreen {
+        width: 56px;
+        left: -36px;
+      }
     }
 
     &-Right {
-      right: -16px;
+      right: -11px;
+
+      &.TouchScreen {
+        width: 56px;
+        right: -36px;
+      }
     }
   }
 }

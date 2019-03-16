@@ -28,13 +28,4 @@ export default class BaseComponent implements BaseComponentInterface {
             eventListener.element.removeEventListener(eventListener.type, eventListener.callback);
         });
     }
-
-    addClass(element: HTMLElement, classes: string|string[]): Promise {
-        return DocumentHelper.addClass(element, classes);
-    }
-
-    removeClass(element: HTMLElement, classes: string|string[]): Promise {
-        return DocumentHelper.removeClass(element, classes);
-    }
-
 }

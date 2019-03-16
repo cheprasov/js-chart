@@ -10,6 +10,9 @@ import type { GraphInterface } from '../Graph/GraphInterface';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 import './Navigation.scss';
+import type { MinMaxValueType } from '../../Utils/ArrayUtils';
+import ArrayUtils from '../../Utils/ArrayUtils';
+import DisplayUtils from '../../Utils/DisplayUtils';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -42,15 +45,17 @@ export default class Navigation extends BaseComponent implements NavigationInter
     _divShadowRight: ?HTMLDivElement;
     _divScroll: ?HTMLDivElement;
 
-    _moveScrollData: ?MoveScrollDataType;
+    _visibilityMap: VisibilityMapType;
 
+    _moveScrollData: ?MoveScrollDataType;
     _scrollData: ScrollDataType = { left: 0, right: 0, center: 0, width: 0 };
     _callbackOnChangeNavigationScope: Function = () => {};
-    _navigationScope: NavigationScopeType = {};
+    _navigationScope: NavigationScopeType;
 
-    constructor(chartData: ChartDataType) {
+    constructor(chartData: ChartDataType, visibilityMap: VisibilityMapType) {
         super();
         this._data = chartData;
+        this._visibilityMap = visibilityMap;
         this._initData();
     }
 
@@ -58,17 +63,17 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._navigationScope = {
             minValue: this._data.minValue,
             maxValue: this._data.maxValue,
-            minX: 0,
-            maxY: this._data.x.length - 1,
+            minXIndex: 0,
+            maxXIndex: this._data.x.length - 1,
+            minValueSlice: this._data.minValue,
+            maxValueSlice: this._data.maxValue,
         };
     }
 
-    _updateNavigationScope(visibilityMap: VisibilityMapType) {
-        //this._data.lines
-    }
-
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
-        this._updateVerticalScope(visibilityMap);
+        this._visibilityMap = visibilityMap;
+
+        this._updateVerticalScope();
 
         if (this._graph) {
             this._graph.setVerticalScope({
@@ -87,9 +92,9 @@ export default class Navigation extends BaseComponent implements NavigationInter
         return { ...this._navigationScope };
     }
 
-    _updateVerticalScope(visibilityMap: ?VisibilityMapType = null): void {
+    _updateVerticalScope(): void {
         const verticalScope = this._data.lines.reduce((result: {}, chartLine: ChartLineType) => {
-            if (visibilityMap && !visibilityMap[chartLine.key]) {
+            if (!this._visibilityMap[chartLine.key]) {
                 // skip invisible lines
                 return result;
             }
@@ -105,19 +110,39 @@ export default class Navigation extends BaseComponent implements NavigationInter
             return result;
         }, { maxValue: null, minValue: null });
 
-        this._navigationScope.minValue = verticalScope.minValue;
-        this._navigationScope.maxValue = verticalScope.maxValue;
-        this._navigationScopeDidUpdate();
+        if (this._navigationScope.minValue !== verticalScope.minValue
+            || this._navigationScope.maxValue !== verticalScope.maxValue) {
+            this._navigationScope.minValue = verticalScope.minValue;
+            this._navigationScope.maxValue = verticalScope.maxValue;
+
+            this._updateVerticalSliceScope();
+            this._navigationScopeDidUpdate();
+        }
     }
 
     _updateHorizontalScope(): void {
-        this._navigationScope.minX = Math.round(
-            this._scrollData.left / this._scrollData.width * (this._data.x.length - 1),
-        );
-        this._navigationScope.maxX = Math.round(
+        const minXIndex = Math.round(this._scrollData.left / this._scrollData.width * (this._data.x.length - 1));
+        const maxXIndex = Math.round(
             (this._scrollData.width - this._scrollData.right) / this._scrollData.width * (this._data.x.length - 1),
         );
-        this._navigationScopeDidUpdate();
+        if (this._navigationScope.minXIndex !== minXIndex || this._navigationScope.maxXIndex !== maxXIndex) {
+            this._navigationScope.minXIndex = minXIndex;
+            this._navigationScope.maxXIndex = maxXIndex;
+
+            this._updateVerticalSliceScope();
+            this._navigationScopeDidUpdate();
+        }
+    }
+
+    _updateVerticalSliceScope() {
+        const values: number[][] = this._data.lines.map((line: ChartLineType) => line.values);
+        const minMaxValue: MinMaxValueType = ArrayUtils.getMinMaxValueBySliceArrays(
+            values,
+            this._navigationScope.minXIndex,
+            this._navigationScope.maxXIndex,
+        );
+        this._navigationScope.minValueSlice = minMaxValue.minValue;
+        this._navigationScope.maxValueSlice = minMaxValue.maxValue;
     }
 
     _navigationScopeDidUpdate(): void {
@@ -125,9 +150,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     render(container: HTMLElement) {
-        const divNavigation: HTMLDivElement = document.createElement('div');
-        divNavigation.classList.add('Navigation');
-        container.appendChild(divNavigation);
+        const divNavigation: HTMLDivElement = DocumentHelper.createDivElement('Navigation', container);
 
         const width = divNavigation.clientWidth;
         const height = divNavigation.clientHeight;
@@ -135,51 +158,52 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._scrollData.width = width;
         this._scrollData.minWidth = Math.round(width * SCROLL_CENTER_MIN_RATIO);
 
-        this._graph = new GraphCanvas(this._data, {
+        this._graph = new GraphCanvas({
+            data: this._data,
+            visibilityMap: this._visibilityMap,
             width,
             height,
             minValue: this._navigationScope.minValue,
             maxValue: this._navigationScope.maxValue,
         });
+
         const graphElement = this._graph.getGraphElement();
         graphElement.classList.add('Navigation-Graph');
         divNavigation.appendChild(graphElement);
 
-        this._divShadowLeft = document.createElement('div');
-        this._divShadowLeft.classList.add('Navigation-Shadow-Left');
-        divNavigation.appendChild(this._divShadowLeft);
+        const touchScreen = DisplayUtils.isTouchScreen() ? 'TouchScreen' : null;
 
-        this._divShadowRight = document.createElement('div');
-        this._divShadowRight.classList.add('Navigation-Shadow-Right');
-        divNavigation.appendChild(this._divShadowRight);
-
-        this._divScroll = document.createElement('div');
-        this._divScroll.classList.add('Navigation-Scroll');
-        divNavigation.appendChild(this._divScroll);
-
-        const divScrollLeft: HTMLDivElement = document.createElement('div');
-        divScrollLeft.classList.add('Navigation-Scroll-Left');
-        this._divScroll.appendChild(divScrollLeft);
-
-        const divScrollRight: HTMLDivElement = document.createElement('div');
-        divScrollRight.classList.add('Navigation-Scroll-Right');
-        this._divScroll.appendChild(divScrollRight);
+        this._divShadowLeft = DocumentHelper.createDivElement('Navigation-Shadow-Left', divNavigation);
+        this._divShadowRight = DocumentHelper.createDivElement('Navigation-Shadow-Right', divNavigation);
+        this._divScroll = DocumentHelper.createDivElement('Navigation-Scroll', divNavigation);
+        const divScrollLeft: HTMLDivElement = DocumentHelper.createDivElement(
+            ['Navigation-Scroll-Left', touchScreen || null],
+            this._divScroll,
+        );
+        const divScrollRight:HTMLDivElement = DocumentHelper.createDivElement(
+            ['Navigation-Scroll-Right', touchScreen || null],
+            this._divScroll,
+        );
 
         this._addScrollEvents(this._divScroll, divScrollLeft, divScrollRight);
     }
 
     _addScrollEvents(divScroll: HTMLDivElement, divScrollLeft: HTMLDivElement, divScrollRight: HTMLDivElement) {
-        this.addEventListener(divScrollLeft, ['touchstart', 'mousedown'], (event: TouchEvent) => {
+        const eventStartType = DisplayUtils.isTouchScreen() ? 'touchstart' : 'mousedown';
+        const eventMoveType = DisplayUtils.isTouchScreen() ? 'touchmove' : 'mousemove';
+        const eventEndType = DisplayUtils.isTouchScreen() ? ['touchend', 'touchcancel'] : 'mouseup';
+
+        this.addEventListener(divScrollLeft, eventStartType, (event: TouchEvent) => {
             this._onTouchStartScroll(event, MOVE_SCROLL_TYPE_LEFT);
         });
-        this.addEventListener(divScrollRight, ['touchstart', 'mousedown'], (event: TouchEvent) => {
+        this.addEventListener(divScrollRight, eventStartType, (event: TouchEvent) => {
             this._onTouchStartScroll(event, MOVE_SCROLL_TYPE_RIGHT);
         });
-        this.addEventListener(divScroll, ['touchstart', 'mousedown'], (event: TouchEvent) => {
+        this.addEventListener(divScroll, eventStartType, (event: TouchEvent) => {
             this._onTouchStartScroll(event, MOVE_SCROLL_TYPE_CENTER);
         });
-        this.addEventListener(document, ['touchmove', 'mousemove'], this._onTouchMoveScroll.bind(this));
-        this.addEventListener(document, ['touchend', 'touchcancel', 'mouseup'], this._onTouchEndScroll.bind(this));
+        this.addEventListener(document, eventMoveType, this._onTouchMoveScroll.bind(this));
+        this.addEventListener(document, eventEndType, this._onTouchEndScroll.bind(this));
     }
 
     _onTouchStartScroll(event: TouchEvent, scrollType: MoveTypeType) {
@@ -274,6 +298,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
             });
 
             this._updateHorizontalScope();
+            this._updateVerticalSliceScope();
         }
     }
 

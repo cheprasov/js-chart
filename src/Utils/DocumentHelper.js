@@ -9,23 +9,19 @@ export default class DocumentHelper {
         });
     }
 
-    static addClass(element: HTMLElement, classes: string|string[]): Promise {
-        //return this.update(() => {
+    static createDivElement(classes: ?string|string[] = null, parent: ?HTMLElement = null): HTMLDivElement {
+        const div = document.createElement('div');
+        if (classes) {
             if (Array.isArray(classes)) {
-                element.classList.add(...classes);
+                div.classList.add(...classes.filter(className => !!className));
             } else {
-                element.classList.add(classes);
+                div.classList.add(classes);
             }
-        //});
+        }
+        if (parent) {
+            parent.appendChild(div);
+        }
+        return div;
     }
 
-    static removeClass(element: HTMLElement, classes: string|string[]): Promise {
-        return this.update(() => {
-            if (Array.isArray(classes)) {
-                element.classList.remove(...classes);
-            } else {
-                element.classList.remove(classes);
-            }
-        });
-    }
 }

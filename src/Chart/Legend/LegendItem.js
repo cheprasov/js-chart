@@ -5,6 +5,8 @@ import type { LegendItemInterface } from './LegendItemInterface';
 
 import './LegendItem.scss';
 import BaseComponent from '../Base/BaseComponent';
+import DocumentHelper from '../../Utils/DocumentHelper';
+import DisplayUtils from '../../Utils/DisplayUtils';
 
 export default class LegendItem extends BaseComponent implements LegendItemInterface {
 
@@ -37,6 +39,10 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
     _onClick(event: MouseEvent | TouchEvent) {
         const target: HTMLElement = event.currentTarget;
 
+        if (event.touches && event.touches.length !== 1) {
+            return;
+        }
+
         this._isChecked = !this._isChecked;
         if (this._isChecked) {
             target.classList.add('checked');
@@ -48,24 +54,24 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
         }
         event.stopPropagation();
 
-        this._callbackOnChangeVisibility();
+        this._callbackOnChangeVisibility(this);
     }
 
     render(container: HTMLElement): void {
-        const divLegend: HTMLDivElement = document.createElement('div');
-        divLegend.classList.add('ChartLegend-Item', 'checked');
-        // use touchstart for feeling quick interaction
-        this.addEventListener(divLegend, ['click', 'touchstart'], this._onClick.bind(this));
+        const divLegend: HTMLDivElement = DocumentHelper.createDivElement(['ChartLegend-Item', 'checked']);
+        this.addEventListener(
+            divLegend,
+            // use touchstart for feeling quick interaction
+            DisplayUtils.isTouchScreen() ? 'touchstart' : 'click',
+            this._onClick.bind(this),
+        );
 
-        const divIcon: HTMLDivElement = document.createElement('div');
-        divIcon.classList.add('ChartLegend-Item-Icon');
+        const divIcon: HTMLDivElement = DocumentHelper.createDivElement('ChartLegend-Item-Icon', divLegend);
         divIcon.style.backgroundColor = this._color;
-        divLegend.appendChild(divIcon);
+        DocumentHelper.createDivElement('ChartLegend-Item-Icon-Off', divIcon);
 
-        const divLabel: HTMLDivElement = document.createElement('div');
-        divLabel.classList.add('ChartLegend-Item-Label');
+        const divLabel: HTMLDivElement = DocumentHelper.createDivElement('ChartLegend-Item-Label', divLegend);
         divLabel.appendChild(document.createTextNode(this._name));
-        divLegend.appendChild(divLabel);
 
         container.appendChild(divLegend);
     }

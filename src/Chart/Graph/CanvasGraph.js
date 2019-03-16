@@ -24,32 +24,40 @@ type LineDataMapType = {
 };
 
 type OptionsType = {
-    devicePixelRatio?: number,
-    width: number,
-    height: number,
-    verticalPaddingRatio: number,
-    animationDuration: number,
+    data: ChartDataType,
+    visibilityMap: VisibilityMapType,
     minValue: number,
     maxValue: number,
+    width: number,
+    height: number,
+    devicePixelRatio?: number,
+    verticalPaddingRatio?: number,
+    animationDuration?: number,
+    lineWidth?: number,
 }
 
 const DEFAULT_CONSTRUCTOR_PARAMS = {
-    devicePixelRatio: DisplayUtils.getDevicePixelRatio(),
-    width: 100,
-    height: 50,
-    verticalPaddingRatio: 0.1, // 20%
-    animationDuration: 200,
+    data: null,
+    visibilityMap: null,
     minValue: 0,
     maxValue: 0,
+    width: 100,
+    height: 50,
+    devicePixelRatio: DisplayUtils.getDevicePixelRatio() * 0.75,
+    verticalPaddingRatio: 0.1, // 10%
+    animationDuration: 200,
+    lineWidth: 1.5,
 };
 
 export default class GraphCanvas implements GraphInterface {
 
     _data: ChartDataType;
+    _visibilityMap: VisibilityMapType;
     _devicePixelRatio: number;
     _width: number;
     _height: number;
     _verticalPaddingRatio: number;
+    _lineWidth: number;
 
     _canvas: HTMLCanvasElement;
     _context: CanvasRenderingContext2D;
@@ -59,22 +67,22 @@ export default class GraphCanvas implements GraphInterface {
     _verticalPadding: number;
 
     _verticalScope: VerticalScopeType;
-    _visibilityMap: VisibilityMapType = {};
-
     // separate scope for each line is because different animation on task mock
     _lineDataMap: LineDataMapType = {};
 
     _animation: ?WebAnimation;
 
-    constructor(chartData: ChartDataType, options: OptionsType = {}) {
+    constructor(options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
 
-        this._data = chartData;
-        this._devicePixelRatio = params.devicePixelRatio;
+        this._data = params.data;
+        this._visibilityMap = params.visibilityMap;
+        this._verticalScope = { minValue: params.minValue, maxValue: params.maxValue };
         this._width = params.width;
         this._height = params.height;
+        this._devicePixelRatio = params.devicePixelRatio;
         this._verticalPaddingRatio = params.verticalPaddingRatio;
-        this._verticalScope = { minValue: params.minValue, maxValue: params.maxValue };
+        this._lineWidth = params.lineWidth;
 
         this._canvasWidth = Math.round(this._devicePixelRatio * this._width);
         this._canvasHeight = Math.round(this._devicePixelRatio * this._height);
@@ -95,14 +103,10 @@ export default class GraphCanvas implements GraphInterface {
         this._context = this._canvas.getContext('2d');
         this._context.lineJoin = 'bevel';
         this._context.lineCap = 'butt';
-        this._context.lineWidth = this._devicePixelRatio * 1.5;
+        this._context.lineWidth = this._devicePixelRatio * this._lineWidth;
     }
 
     _initData() {
-        this._data.lines.forEach((chartLine: ChartLineType) => {
-            this._visibilityMap[chartLine.key] = true;
-        });
-
         const scope = this._getGraphScope();
         this._data.lines.forEach((chartLine: ChartLineType) => {
             this._lineDataMap[chartLine.key] = {
@@ -117,9 +121,7 @@ export default class GraphCanvas implements GraphInterface {
     }
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
-        Object.keys(this._visibilityMap).forEach((key: string) => {
-            this._visibilityMap[key] = !!visibilityMap[key];
-        });
+        this._visibilityMap = visibilityMap;
         this._drawAnimation(this._getGraphScope());
     }
 
@@ -159,12 +161,6 @@ export default class GraphCanvas implements GraphInterface {
             this._draw();
         });
         this._animation.run();
-    }
-
-    _getVisibleLines(): ChartLineType[] {
-        return this._data.lines.filter((chartLine: ChartLineType) => {
-            return this._visibilityMap[chartLine.key] === true;
-        });
     }
 
     _getGraphScope(): GraphScopeType {

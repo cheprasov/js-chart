@@ -7,41 +7,43 @@ import type { ChartLineType, ChartDataType } from '../Chart';
 import type { LegendItemInterface } from './LegendItemInterface';
 
 import './Legend.scss';
+import DocumentHelper from '../../Utils/DocumentHelper';
 
 export default class Legend implements LegendInterface {
 
     _data: ChartDataType;
     _legendItems: LegendItemInterface[] = [];
     _callbackOnChangeVisibility: Function = () => {};
+    _visibilityMap: VisibilityMapType = {};
 
     constructor(data: ChartDataType) {
         this._data = data;
+        this._initData();
 
         this._onChangeVisibility = this._onChangeVisibility.bind(this);
+    }
+
+    _initData() {
+        this._data.lines.forEach((line: ChartLineType) => {
+            this._visibilityMap[line.key] = true;
+        });
     }
 
     setCallbackOnChangeVisibility(callback: Function): void {
         this._callbackOnChangeVisibility = callback;
     }
 
-    _onChangeVisibility(): void {
+    _onChangeVisibility(legendItem: LegendItemInterface): void {
+        this._visibilityMap[legendItem.getKey()] = legendItem.isVisible();
         this._callbackOnChangeVisibility(this.getVisibilityMap());
     }
 
     getVisibilityMap(): VisibilityMapType {
-        const visibilityMap: VisibilityMapType = this._legendItems.reduce(
-            (map: {}, legendItem: LegendItemInterface) => {
-                map[legendItem.getKey()] = legendItem.isVisible();
-                return map;
-            },
-            {},
-        );
-        return Object.freeze(visibilityMap);
+        return Object.freeze({ ...this._visibilityMap });
     }
 
     render(container: HTMLElement) {
-        const divChartLegend: HTMLDivElement = document.createElement('div');
-        divChartLegend.classList.add('ChartLegend');
+        const divChartLegend: HTMLDivElement = DocumentHelper.createDivElement('ChartLegend');
 
         this._data.lines.forEach((chartLine: ChartLineType) => {
             const legendItem = new LegendItem(chartLine);

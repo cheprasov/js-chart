@@ -11,4 +11,5 @@ export interface LegendInterface extends RenderInterface {
     setCallbackOnChangeVisibility(callback: Function): void;
 
     getVisibilityMap(): VisibilityMapType;
+
 }
