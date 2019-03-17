@@ -1,11 +1,7 @@
 // @flow
 
 import type { VisibilityMapType } from '../Legend/LegendInterface';
-
-export type VerticalScopeType = {
-    minValue: number,
-    maxValue: number,
-}
+import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 
 export interface GraphInterface {
 
@@ -13,7 +9,7 @@ export interface GraphInterface {
 
     drawLines(): void;
 
-    setVerticalScope(verticalScope: VerticalScopeType): void;
+    setNavigationScope(navigationScope: NavigationScopeType): void;
 
-    setVisibilityMap(visibilityMap: VisibilityMapType, verticalScope: VerticalScopeType): void;
+    setVisibilityMap(visibilityMap: VisibilityMapType): void;
 }

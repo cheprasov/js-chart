@@ -1,6 +1,5 @@
 //@flow
 
-import GraphCanvas from '../Graph/CanvasGraph';
 import BaseComponent from '../Base/BaseComponent';
 import DocumentHelper from '../../Utils/DocumentHelper';
 
@@ -13,6 +12,7 @@ import './Navigation.scss';
 import type { MinMaxValueType } from '../../Utils/ArrayUtils';
 import ArrayUtils from '../../Utils/ArrayUtils';
 import DisplayUtils from '../../Utils/DisplayUtils';
+import NavigationGraphCanvas from '../Graph/NavigationGraphCanvas';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -61,10 +61,10 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     _initData() {
         this._navigationScope = {
+            minXRatio: 0,
+            maxXRatio: 1,
             minValue: this._data.minValue,
             maxValue: this._data.maxValue,
-            minXIndex: 0,
-            maxXIndex: this._data.x.length - 1,
             minValueSlice: this._data.minValue,
             maxValueSlice: this._data.maxValue,
         };
@@ -76,10 +76,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._updateVerticalScope();
 
         if (this._graph) {
-            this._graph.setVerticalScope({
-                minValue: this._navigationScope.minValue,
-                maxValue: this._navigationScope.maxValue,
-            });
+            this._graph.setNavigationScope(this.getNavigationScope());
             this._graph.setVisibilityMap(visibilityMap);
         }
     }
@@ -121,13 +118,12 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     _updateHorizontalScope(): void {
-        const minXIndex = Math.round(this._scrollData.left / this._scrollData.width * (this._data.x.length - 1));
-        const maxXIndex = Math.round(
-            (this._scrollData.width - this._scrollData.right) / this._scrollData.width * (this._data.x.length - 1),
-        );
-        if (this._navigationScope.minXIndex !== minXIndex || this._navigationScope.maxXIndex !== maxXIndex) {
-            this._navigationScope.minXIndex = minXIndex;
-            this._navigationScope.maxXIndex = maxXIndex;
+        const minXRatio = this._scrollData.left / this._scrollData.width;
+        const maxXRatio = (this._scrollData.width - this._scrollData.right) / this._scrollData.width;
+
+        if (this._navigationScope.minXRatio !== minXRatio || this._navigationScope.maxXRatio !== maxXRatio) {
+            this._navigationScope.minXRatio = minXRatio;
+            this._navigationScope.maxXRatio = maxXRatio;
 
             this._updateVerticalSliceScope();
             this._navigationScopeDidUpdate();
@@ -135,11 +131,13 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     _updateVerticalSliceScope() {
-        const values: number[][] = this._data.lines.map((line: ChartLineType) => line.values);
+        const values: number[][] = this._data.lines
+            .filter((line: ChartLineType) => this._visibilityMap[line.key])
+            .map((line: ChartLineType) => line.values);
         const minMaxValue: MinMaxValueType = ArrayUtils.getMinMaxValueBySliceArrays(
             values,
-            this._navigationScope.minXIndex,
-            this._navigationScope.maxXIndex,
+            Math.round(this._navigationScope.minXRatio * (this._data.length - 1)),
+            Math.round(this._navigationScope.maxXRatio * (this._data.length - 1)),
         );
         this._navigationScope.minValueSlice = minMaxValue.minValue;
         this._navigationScope.maxValueSlice = minMaxValue.maxValue;
@@ -158,13 +156,12 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._scrollData.width = width;
         this._scrollData.minWidth = Math.round(width * SCROLL_CENTER_MIN_RATIO);
 
-        this._graph = new GraphCanvas({
+        this._graph = new NavigationGraphCanvas({
             data: this._data,
             visibilityMap: this._visibilityMap,
+            navigationScope: this.getNavigationScope(),
             width,
             height,
-            minValue: this._navigationScope.minValue,
-            maxValue: this._navigationScope.maxValue,
         });
 
         const graphElement = this._graph.getGraphElement();

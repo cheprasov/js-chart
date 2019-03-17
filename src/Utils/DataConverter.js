@@ -46,6 +46,7 @@ export default class DataConverter {
             if (type === CHART_DATA_TYPE_X) {
                 if (!chartObjects.x) {
                     chartObjects.x = data;
+                    chartObjects.length = data.length;
                 }
             }
         });

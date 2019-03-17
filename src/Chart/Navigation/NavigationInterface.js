@@ -4,10 +4,10 @@ import type { RenderInterface } from '../Base/RenderInterface';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 export type NavigationScopeType = {
+    minXRatio: number,
+    maxXRatio: number,
     minValue: number,
     maxValue: number,
-    minXIndex: number,
-    maxXIndex: number,
     minValueSlice: number,
     maxValueSlice: number,
 };

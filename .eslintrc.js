@@ -18,7 +18,7 @@ module.exports = {
             }
         ],
         "no-underscore-dangle": ["error", { "allowAfterThis": true, "allowAfterSuper": true }],
-        "max-len": ["error", { "code": 120 }],
+        "max-len": ["error", { "code": 125 }],
         "spaced-comment": [0],
         "import/no-useless-path-segments": ["never"],
         "import/no-absolute-path": ["never"],
@@ -28,6 +28,7 @@ module.exports = {
         "no-plusplus": "off",
         "prefer-destructuring": "off",
         "arrow-body-style": "off",
+        "no-continue": "off",
     },
     "env": {
         "browser": true,

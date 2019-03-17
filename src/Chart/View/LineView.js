@@ -1,7 +1,7 @@
 //@flow
 
 import DocumentHelper from '../../Utils/DocumentHelper';
-import GraphCanvas from '../Graph/CanvasGraph';
+import GraphCanvas from '../Graph/GraphCanvas';
 
 import type { ViewInterface } from './ViewInterface';
 import type { ChartDataType } from '../Chart';
@@ -30,17 +30,15 @@ export default class LineView implements ViewInterface  {
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
         if (this._graph) {
-            this._graph.setVerticalScope({
-                minValue: this._navigationScope.minValue,
-                maxValue: this._navigationScope.maxValue,
-            });
-            this._graph.setVisibilityMap(this._visibilityMap);
+            this._graph.setNavigationScope(this._navigationScope);
         }
     }
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
         this._visibilityMap = visibilityMap;
-        this._graph.setVisibilityMap(this._visibilityMap);
+        if (this._graph) {
+            this._graph.setVisibilityMap(this._visibilityMap);
+        }
     }
 
     render(container: HTMLElement): void {
@@ -52,6 +50,7 @@ export default class LineView implements ViewInterface  {
         this._graph = new GraphCanvas({
             data: this._data,
             visibilityMap: this._visibilityMap,
+            navigationScope: this._navigationScope,
             width,
             height,
             minValue: this._navigationScope.minValue,

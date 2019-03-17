@@ -30,6 +30,7 @@ export type ChartLineType = {
 export type ChartDataType = {
     lines: ChartLineType[],
     x: number[],
+    length: number,
     minValue: number,
     maxValue: number,
 };
@@ -49,7 +50,6 @@ export default class Chart implements ChartInterface {
         this._chartLegend.setCallbackOnChangeVisibility(this._onChangeVisibility.bind(this));
 
         const visibilityMap = this._chartLegend.getVisibilityMap();
-        console.log(visibilityMap);
         this._chartNavigation = new Navigation(data, visibilityMap);
         this._chartNavigation.setCallbackOnChangeNavigationScope(this._onChangeNavigationScope.bind(this));
 
