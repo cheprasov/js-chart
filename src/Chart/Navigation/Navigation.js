@@ -11,8 +11,8 @@ import type { VisibilityMapType } from '../Legend/LegendInterface';
 import './Navigation.scss';
 import type { MinMaxValueType } from '../../Utils/ArrayUtils';
 import ArrayUtils from '../../Utils/ArrayUtils';
-import DisplayUtils from '../../Utils/DisplayUtils';
-import NavigationGraphCanvas from '../Graph/NavigationGraphCanvas';
+import ScreenUtils from '../../Utils/ScreenUtils';
+import NavigationLineGraphCanvas from '../Graph/NavigationLineGraphCanvas';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -36,10 +36,26 @@ type MoveScrollDataType = {
     clientX: number,
 }
 
+type OptionsType = {
+    data: ChartDataType,
+    visibilityMap: VisibilityMapType,
+    trimZero?: boolean,
+    renderQualityRatio?: number,
+};
+
+const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
+    data: null,
+    visibilityMap: null,
+    trimZero: false,
+    renderQualityRatio: 1,
+};
+
 export default class Navigation extends BaseComponent implements NavigationInterface {
 
     _data: ChartDataType;
     _graph: GraphInterface;
+    _trimZero: boolean;
+    _renderQualityRatio: number;
 
     _divShadowLeft: ?HTMLDivElement;
     _divShadowRight: ?HTMLDivElement;
@@ -52,10 +68,15 @@ export default class Navigation extends BaseComponent implements NavigationInter
     _callbackOnChangeNavigationScope: Function = () => {};
     _navigationScope: NavigationScopeType;
 
-    constructor(chartData: ChartDataType, visibilityMap: VisibilityMapType) {
+    constructor(options: OptionsType) {
+        const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
         super();
-        this._data = chartData;
-        this._visibilityMap = visibilityMap;
+
+        this._data = params.data;
+        this._visibilityMap = params.visibilityMap;
+        this._trimZero = params.trimZero;
+        this._renderQualityRatio = params.renderQualityRatio;
+
         this._initData();
     }
 
@@ -86,7 +107,10 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     getNavigationScope(): NavigationScopeType {
-        return { ...this._navigationScope };
+        if (this._trimZero) {
+            return { ...this._navigationScope };
+        }
+        return { ...this._navigationScope, minValueSlice: 0 };
     }
 
     _updateVerticalScope(): void {
@@ -156,19 +180,20 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this._scrollData.width = width;
         this._scrollData.minWidth = Math.round(width * SCROLL_CENTER_MIN_RATIO);
 
-        this._graph = new NavigationGraphCanvas({
+        this._graph = new NavigationLineGraphCanvas({
             data: this._data,
             visibilityMap: this._visibilityMap,
             navigationScope: this.getNavigationScope(),
             width,
             height,
+            renderQualityRatio: this._renderQualityRatio,
         });
 
         const graphElement = this._graph.getGraphElement();
         graphElement.classList.add('Navigation-Graph');
         divNavigation.appendChild(graphElement);
 
-        const touchScreen = DisplayUtils.isTouchScreen() ? 'TouchScreen' : null;
+        const touchScreen = ScreenUtils.isTouchScreen() ? 'TouchScreen' : null;
 
         this._divShadowLeft = DocumentHelper.createDivElement('Navigation-Shadow-Left', divNavigation);
         this._divShadowRight = DocumentHelper.createDivElement('Navigation-Shadow-Right', divNavigation);
@@ -186,9 +211,9 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     _addScrollEvents(divScroll: HTMLDivElement, divScrollLeft: HTMLDivElement, divScrollRight: HTMLDivElement) {
-        const eventStartType = DisplayUtils.isTouchScreen() ? 'touchstart' : 'mousedown';
-        const eventMoveType = DisplayUtils.isTouchScreen() ? 'touchmove' : 'mousemove';
-        const eventEndType = DisplayUtils.isTouchScreen() ? ['touchend', 'touchcancel'] : 'mouseup';
+        const eventStartType = ScreenUtils.isTouchScreen() ? 'touchstart' : 'mousedown';
+        const eventMoveType = ScreenUtils.isTouchScreen() ? 'touchmove' : 'mousemove';
+        const eventEndType = ScreenUtils.isTouchScreen() ? ['touchend', 'touchcancel'] : 'mouseup';
 
         this.addEventListener(divScrollLeft, eventStartType, (event: TouchEvent) => {
             this._onTouchStartScroll(event, MOVE_SCROLL_TYPE_LEFT);

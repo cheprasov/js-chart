@@ -2,7 +2,7 @@
 
 const IS_TOUCH_SCREEN = ('ontouchstart' in document.documentElement);
 
-export default class DisplayUtils {
+export default class ScreenUtils {
 
     static isTouchScreen(): boolean {
         return IS_TOUCH_SCREEN;

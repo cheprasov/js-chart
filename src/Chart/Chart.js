@@ -12,12 +12,6 @@ import type { ViewInterface } from './View/ViewInterface';
 import './Chart.scss';
 import LineView from './View/LineView';
 
-type OptionsType = {};
-
-const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
-    data: null,
-};
-
 export type ChartLineType = {
     key: string,
     name: string,
@@ -35,6 +29,18 @@ export type ChartDataType = {
     maxValue: number,
 };
 
+type OptionsType = {
+    data: ChartDataType,
+    trimZero?: boolean,
+    renderQualityRatio?: number,
+};
+
+const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
+    data: null,
+    trimZero: false,
+    renderQualityRatio: 1,
+};
+
 export default class Chart implements ChartInterface {
 
     _data: ChartDataType;
@@ -43,18 +49,28 @@ export default class Chart implements ChartInterface {
     _chartView: ViewInterface;
 
     constructor(data: ChartDataType, options: OptionsType = {}) {
-        this._data = data;
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
+        this._data = data;
 
         this._chartLegend = new Legend(data);
         this._chartLegend.setCallbackOnChangeVisibility(this._onChangeVisibility.bind(this));
 
         const visibilityMap = this._chartLegend.getVisibilityMap();
-        this._chartNavigation = new Navigation(data, visibilityMap);
+        this._chartNavigation = new Navigation({
+            data,
+            visibilityMap,
+            trimZero: params.trimZero,
+            renderQualityRatio: params.renderQualityRatio,
+        });
         this._chartNavigation.setCallbackOnChangeNavigationScope(this._onChangeNavigationScope.bind(this));
 
         const navigationScope = this._chartNavigation.getNavigationScope();
-        this._chartView = new LineView(data, visibilityMap, navigationScope);
+        this._chartView = new LineView({
+            data,
+            visibilityMap,
+            navigationScope,
+            renderQualityRatio: params.renderQualityRatio
+        });
     }
 
     _onChangeVisibility(visibilityMap: VisibilityMapType): void {

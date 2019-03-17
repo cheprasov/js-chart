@@ -6,7 +6,7 @@ import type { LegendItemInterface } from './LegendItemInterface';
 import './LegendItem.scss';
 import BaseComponent from '../Base/BaseComponent';
 import DocumentHelper from '../../Utils/DocumentHelper';
-import DisplayUtils from '../../Utils/DisplayUtils';
+import ScreenUtils from '../../Utils/ScreenUtils';
 
 export default class LegendItem extends BaseComponent implements LegendItemInterface {
 
@@ -62,7 +62,7 @@ export default class LegendItem extends BaseComponent implements LegendItemInter
         this.addEventListener(
             divLegend,
             // use touchstart for feeling quick interaction
-            DisplayUtils.isTouchScreen() ? 'touchstart' : 'click',
+            ScreenUtils.isTouchScreen() ? 'touchstart' : 'click',
             this._onClick.bind(this),
         );
 
