@@ -10,7 +10,8 @@ import type { GraphInterface } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
-import type { AxisXGeneratorInterface, AxisXLineType } from './Axis/AxisXGeneratorInterface';
+import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
+import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 
 export type GraphScopeType = {
     maxValue: ?number,
@@ -30,7 +31,7 @@ export type LineDataMapType = {
 
 type AxisXDataType = {
     hash: string,
-    lines: AxisXLineType[],
+    items: AxisXItemType[],
     scope: GraphScopeType,
     opacity: number,
 }
@@ -50,6 +51,7 @@ export type OptionsType = {
     animationDuration?: number,
     lineWidth?: number,
     axisXGenerator?: AxisXGeneratorInterface,
+    axisYGenerator?: AxisYGeneratorInterface,
     renderQualityRatio?: number,
 }
 
@@ -60,10 +62,11 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
     width: 100,
     height: 50,
     devicePixelRatio: ScreenUtils.getDevicePixelRatio(),
-    verticalPaddingRatio: 0.20, // 20%
+    verticalPaddingRatio: 0.2, // 20%
     animationDuration: 200,
     lineWidth: 1.5,
     axisXGenerator: null,
+    axisYGenerator: null,
     renderQualityRatio: 1,
 };
 
@@ -82,6 +85,7 @@ export default class LineGraphCanvas implements GraphInterface {
     _renderQualityRatio: number;
 
     _axisXGenerator: AxisXGeneratorInterface | null = null;
+    _axisYGenerator: AxisYGeneratorInterface | null = null;
 
     _canvas: HTMLCanvasElement;
     _context: CanvasRenderingContext2D;
@@ -109,6 +113,7 @@ export default class LineGraphCanvas implements GraphInterface {
         this._verticalPaddingRatio = params.verticalPaddingRatio;
         this._lineWidth = params.lineWidth;
         this._axisXGenerator = params.axisXGenerator;
+        this._axisYGenerator = params.axisYGenerator;
 
         this._canvasWidth = Math.round(this._getCanvasValue(this._width));
         this._canvasHeight = Math.round(this._getCanvasValue(this._height));
@@ -165,7 +170,7 @@ export default class LineGraphCanvas implements GraphInterface {
         this._axisXDataMap = {
             [this._axisXHash]: {
                 hash: this._axisXHash,
-                lines: this._axisXGenerator.getAxisXLines(),
+                items: this._axisXGenerator.getAxisXItems(),
                 scope: this._getGraphScope(),
                 opacity: 1,
             },
@@ -197,7 +202,7 @@ export default class LineGraphCanvas implements GraphInterface {
         this._axisXHash = currentAxisXHash;
         this._axisXDataMap[currentAxisXHash] = {
             hash: currentAxisXHash,
-            lines: this._axisXGenerator.getAxisXLines(),
+            items: this._axisXGenerator.getAxisXItems(),
             scope: { ...this._axisXDataMap[prevAxisXHash].scope },
             opacity: 0,
         };
@@ -336,10 +341,26 @@ export default class LineGraphCanvas implements GraphInterface {
             this._drawLine(chartLine, scaleX, shiftX, beginI, endI);
         });
         this._drawAxisXText();
+        this._drawAxisYTitles(scaleX, shiftX);
     }
 
     _clear(): void {
         this._context.clearRect(0, 0, this._canvasWidth, this._canvasHeight);
+    }
+
+    _drawAxisYTitles(scaleX: number, shiftX: number) {
+        const items: AxisYItemType[] = this._axisYGenerator.getAxisYItems();
+
+        const context = this._context;
+        context.save();
+        context.translate(0, this._canvasHeight - this._verticalPadding);
+
+        items.forEach((item: AxisYItemType) => {
+            context.globalAlpha = 1;
+            const x = item.index * scaleX - shiftX;
+            context.fillText(item.title, x, this._getCanvasValue(18));
+        });
+        context.restore();
     }
 
     _drawAxisXLines() {
@@ -348,6 +369,7 @@ export default class LineGraphCanvas implements GraphInterface {
         }
         const context = this._context;
         context.save();
+        context.translate(0, this._canvasHeight - this._verticalPadding);
         context.strokeStyle = '#dfe6eb';
         context.lineWidth = this._getCanvasValue(1);
 
@@ -355,9 +377,8 @@ export default class LineGraphCanvas implements GraphInterface {
             context.globalAlpha = axisXData.opacity;
             context.beginPath();
 
-            axisXData.lines.forEach((line: AxisXLineType) => {
-                const y = (this._canvasHeight - this._verticalPadding
-                    - (line.value - axisXData.scope.minValue) * axisXData.scope.scaleY);
+            axisXData.items.forEach((item: AxisXItemType) => {
+                const y = -(item.value - axisXData.scope.minValue) * axisXData.scope.scaleY;
                 context.moveTo(0, y);
                 context.lineTo(this._canvasWidth, y);
             });
@@ -373,14 +394,14 @@ export default class LineGraphCanvas implements GraphInterface {
         }
         const context = this._context;
         context.save();
+        context.translate(0, this._canvasHeight - this._verticalPadding);
 
         Object.values(this._axisXDataMap).forEach((axisXData: AxisXDataType) => {
             context.globalAlpha = axisXData.opacity;
-            axisXData.lines.forEach((line: AxisXLineType) => {
-                const y = (this._canvasHeight - this._verticalPadding
-                    - (line.value - axisXData.scope.minValue) * axisXData.scope.scaleY);
+            axisXData.items.forEach((item: AxisXItemType) => {
+                const y = -(item.value - axisXData.scope.minValue) * axisXData.scope.scaleY;
 
-                context.fillText(line.title, 0, y - this._getCanvasValue(8));
+                context.fillText(item.title, 0, y - this._getCanvasValue(8));
             });
         });
         context.restore();
@@ -391,6 +412,7 @@ export default class LineGraphCanvas implements GraphInterface {
 
         const context = this._context;
         context.save();
+        context.translate(0, this._canvasHeight - this._verticalPadding);
         context.lineWidth = this._getCanvasValue(this._lineWidth);
         context.strokeStyle = chartLine.color;
         context.globalAlpha = lineData.opacity;
@@ -405,7 +427,7 @@ export default class LineGraphCanvas implements GraphInterface {
             }
 
             const x = index * scaleX - shiftX;
-            const y = this._canvasHeight - this._verticalPadding - (value - lineData.scope.minValue) * lineData.scope.scaleY;
+            const y = -(value - lineData.scope.minValue) * lineData.scope.scaleY;
 
             if (isMoveTo) {
                 context.moveTo(x, y);

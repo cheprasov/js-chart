@@ -2,17 +2,15 @@
 
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 
-export type AxisXItemType = {
-    value: number,
+export type AxisYItemType = {
+    index: number,
     title: string,
 };
 
-export interface AxisXGeneratorInterface {
+export interface AxisYGeneratorInterface {
 
     setNavigationScope(navigationScope: NavigationScopeType): void;
 
-    getAxisXItems(): null | AxisXItemType[];
-
-    getHash(): null | string;
+    getAxisYItems(): null | AxisYItemType[];
 
 }

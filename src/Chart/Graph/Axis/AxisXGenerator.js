@@ -1,66 +1,66 @@
 //@flow
 
-import type { AxisXGeneratorInterface, AxisXLineType } from './AxisXGeneratorInterface';
+import type { AxisXGeneratorInterface, AxisXItemType } from './AxisXGeneratorInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 import MathUtils from '../../../Utils/MathUtils';
 
 export default class AxisXGenerator implements AxisXGeneratorInterface {
 
-    _lineCount: number;
+    _count: number;
     _navigationScope: NavigationScopeType;
-    _cacheAxisXLines: null | AxisXLineType[] = null;
+    _cacheAxisXItems: null | AxisXItemType[] = null;
     _cacheHash: null | string = null;
 
-    constructor(lineCount: number, navigationScope: NavigationScopeType) {
-        this._lineCount = lineCount;
+    constructor(count: number, navigationScope: NavigationScopeType) {
+        this._count = count;
         this._navigationScope = navigationScope;
     }
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
-        this._cacheAxisXLines = null;
+        this._cacheAxisXItems = null;
         this._cacheHash = null;
     }
 
     getHash(): null | string {
-        if (!this.getAxisXLines() || !this._cacheAxisXLines) {
+        if (!this.getAxisXItems() || !this._cacheAxisXItems) {
             return null;
         }
         if (this._cacheHash) {
             return this._cacheHash;
         }
-        this._cacheHash = this._cacheAxisXLines.reduce((result: number[], line: AxisXLineType) => {
-            result.push(line.value);
+        this._cacheHash = this._cacheAxisXItems.reduce((result: number[], item: AxisXItemType) => {
+            result.push(item.value);
             return result;
         }, []).join('/');
 
         return this._cacheHash;
     }
 
-    getAxisXLines(): null | AxisXLineType[] {
+    getAxisXItems(): null | AxisXItemType[] {
         if (!this._navigationScope || this._navigationScope.maxValueSlice === null
             || this._navigationScope.minValueSlice === null) {
             return null;
         }
 
-        if (this._cacheAxisXLines) {
-            return this._cacheAxisXLines;
+        if (this._cacheAxisXItems) {
+            return this._cacheAxisXItems;
         }
 
         const topValue = MathUtils.largeRound(this._navigationScope.maxValueSlice);
         const lowValue = MathUtils.largeFloor(this._navigationScope.minValueSlice);
-        const stepValue = Math.round((topValue - lowValue) / (this._lineCount - 1));
+        const stepValue = Math.round((topValue - lowValue) / (this._count - 1));
 
-        const lines: AxisXLineType[] = [];
+        const items: AxisXItemType[] = [];
 
-        for (let i = 0; i < this._lineCount; i += 1) {
+        for (let i = 0; i < this._count; i += 1) {
             const value = MathUtils.largeFloor(lowValue + i * stepValue);
             const title = MathUtils.formatLargeNumber(value);
-            lines.push({ value, title });
+            items.push({ value, title });
         }
 
-        this._cacheAxisXLines = Object.freeze(lines);
-        return this._cacheAxisXLines;
+        this._cacheAxisXItems = Object.freeze(items);
+        return this._cacheAxisXItems;
     }
 
 }

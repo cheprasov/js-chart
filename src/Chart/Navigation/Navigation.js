@@ -13,6 +13,7 @@ import type { MinMaxValueType } from '../../Utils/ArrayUtils';
 import ArrayUtils from '../../Utils/ArrayUtils';
 import ScreenUtils from '../../Utils/ScreenUtils';
 import NavigationLineGraphCanvas from '../Graph/NavigationLineGraphCanvas';
+import MathUtils from '../../Utils/MathUtils';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -65,8 +66,9 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     _moveScrollData: ?MoveScrollDataType;
     _scrollData: ScrollDataType = { left: 0, right: 0, center: 0, width: 0 };
-    _callbackOnChangeNavigationScope: Function = () => {};
     _navigationScope: NavigationScopeType;
+
+    _callbackOnChangeNavigationScope: Function = () => {};
 
     constructor(options: OptionsType) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
@@ -108,9 +110,19 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     getNavigationScope(): NavigationScopeType {
         if (this._trimZero) {
-            return { ...this._navigationScope };
+            return {
+                ...this._navigationScope,
+                //avoid stagger of axis x
+                minValueSlice: MathUtils.largeFloor(this._navigationScope.minValueSlice),
+                maxValueSlice: MathUtils.largeCeil(this._navigationScope.maxValueSlice),
+            };
         }
-        return { ...this._navigationScope, minValueSlice: 0 };
+        return {
+            ...this._navigationScope,
+            minValueSlice: 0,
+            //avoid stagger of axis x
+            maxValueSlice: MathUtils.largeCeil(this._navigationScope.maxValueSlice),
+        };
     }
 
     _updateVerticalScope(): void {

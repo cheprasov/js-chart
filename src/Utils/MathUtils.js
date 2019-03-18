@@ -21,6 +21,7 @@ export default class MathUtils {
         return a;
     }
 
+    /* todo: refactor code */
     static largeRound(value: number, len: number = 2): number {
         if (value > -(10 ** len) && value < (10 ** len)) {
             // do not touch small numbers
@@ -37,6 +38,15 @@ export default class MathUtils {
         }
         const power = (Math.floor(value)).toString(10).length - len;
         return Math.floor(value / (10 ** power)) * (10 ** power);
+    }
+
+    static largeCeil(value: number, len: number = 2): number {
+        if (value >= -(10 ** len) && value <= (10 ** len)) {
+            // do not touch small numbers
+            return value;
+        }
+        const power = (Math.ceil(value)).toString(10).length - len;
+        return Math.ceil(value / (10 ** power)) * (10 ** power);
     }
 
     /* todo: rewrite the function for better result */

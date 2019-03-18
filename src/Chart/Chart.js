@@ -37,7 +37,7 @@ type OptionsType = {
 
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
     data: null,
-    trimZero: false,
+    trimZero: true,
     renderQualityRatio: 1,
 };
 
