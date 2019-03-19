@@ -1,7 +1,7 @@
 //@flow
 
 import DocumentHelper from '../../Utils/DocumentHelper';
-import LineGraphCanvas from '../Graph/LineGraphCanvas';
+import LineGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineGraphCanvas';
 import AxisXGenerator from '../Graph/Axis/AxisXGenerator';
 import AxisYGenerator from '../Graph/Axis/AxisYGenerator';
 
@@ -15,7 +15,6 @@ import './LineView.scss';
 
 const GRAPH_LINE_WIDTH = 2.5;
 const GRAPH_AXIS_Y_COUNT = 6;
-const GRAPH_AXIS_X_TEXT_WIDTH = 60;
 
 type OptionsType = {
     data: ChartDataType,

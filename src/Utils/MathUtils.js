@@ -25,7 +25,7 @@ export default class MathUtils {
         return (a + b) / 2;
     }
 
-    static minModBy2(value: number, maxLimit: value) {
+    static maxModBy2(value: number, maxLimit: value) {
         let mod = 1;
         while (value / mod > maxLimit) {
             mod *= 2;

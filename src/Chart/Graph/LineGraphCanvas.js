@@ -12,7 +12,6 @@ import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
-import MathUtils from '../../Utils/MathUtils';
 
 export type GraphScopeType = {
     maxValue: ?number,
@@ -39,6 +38,14 @@ type AxisYDataType = {
 
 type AxisYDataMapType = {
     [string]: AxisYDataType
+};
+
+type AxisXDataType = {
+    opacity: number,
+}
+
+type AxisXDataMapType = {
+    [number]: AxisXDataType
 };
 
 export type OptionsType = {
@@ -71,6 +78,8 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
     renderQualityRatio: 1,
 };
 
+export const GRAPH_AXIS_X_TEXT_WIDTH = 80;
+
 export default class LineGraphCanvas implements GraphInterface {
 
     _data: ChartDataType;
@@ -97,6 +106,7 @@ export default class LineGraphCanvas implements GraphInterface {
     _lineDataMap: LineDataMapType;
     _axisYDataMap: AxisYDataMapType;
     _axisYHash: string;
+    _axisXDataMap: AxisXDataMapType;
 
     _animation: ?WebAnimation;
 
@@ -132,6 +142,7 @@ export default class LineGraphCanvas implements GraphInterface {
         this._initCanvas();
         this._initLineDataMap();
         this._initAxisYDataMap();
+        this._initAxisXDataMap();
         this._draw();
     }
 
@@ -178,12 +189,25 @@ export default class LineGraphCanvas implements GraphInterface {
         };
     }
 
+    _initAxisXDataMap() {
+        if (!this._axisXGenerator) {
+            return;
+        }
+        const mod = this._axisXGenerator.getMod();
+        this._axisXDataMap = {
+            [mod]: { mod, opacity: 1 },
+        };
+    }
+
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
         if (this._axisYGenerator) {
             const prevAxisYHash = this._axisYHash;
+            const prevAxisXMod = this._axisXGenerator.getMod();
             this._axisYGenerator.setNavigationScope(navigationScope);
+            this._axisXGenerator.setNavigationScope(navigationScope);
             this._updateAxisYData(prevAxisYHash);
+            this._updateAxisXData(prevAxisXMod);
         }
         this._drawAnimation(this._getGraphScope());
     }
@@ -208,6 +232,17 @@ export default class LineGraphCanvas implements GraphInterface {
             opacity: 0,
         };
         this._axisYDataMap[prevAxisYHash].opacity = 1;
+    }
+
+    _updateAxisXData(prevMod: number) {
+        const currentMod = this._axisXGenerator.getMod();
+        if (prevMod === currentMod) {
+            return;
+        }
+
+        this._axisXDataMap[currentMod] = {
+            opacity: currentMod >= prevMod ? 1 : 0,
+        };
     }
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
@@ -238,16 +273,27 @@ export default class LineGraphCanvas implements GraphInterface {
         return prevAxisYDataMap;
     }
 
+    _getPrevAxisXDataMap(): AxisXDataMapType {
+        const prevAxisXDataMap: AxisXDataMapType = {};
+        Object.entries(this._axisXDataMap).forEach(([mod, axisXData]) => {
+            prevAxisXDataMap[mod] = { opacity: axisXData.opacity };
+        });
+
+        return prevAxisXDataMap;
+    }
+
     _drawAnimation(newScope: GraphScopeType) {
         this._animation.stop();
 
         const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
         const prevAxisYDataMap: AxisYDataMapType = this._getPrevAxisYDataMap();
+        const prevAxisXDataMap: AxisXDataMapType = this._getPrevAxisXDataMap();
         const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
 
         this._animation.setOnStep((progress: ProgressType) => {
             this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
             this._drawAxisYAnimation(progress, newScope, prevAxisYDataMap, isNotEmptyGraph);
+            this._drawAxisXAnimation(progress, prevAxisXDataMap);
             this._clear();
             this._draw();
         });
@@ -299,6 +345,15 @@ export default class LineGraphCanvas implements GraphInterface {
             const prevOpacity: number = prevAxisYDataMap[hash].opacity;
             const opacity = this._axisYHash === hash ? 1 : 0;
             axisYData.opacity = (opacity - prevOpacity) * progress.tween + prevOpacity;
+        });
+    }
+
+    _drawAxisXAnimation(progress: ProgressType, prevAxisXDataMap: AxisXDataMapType): void {
+        const currentMod = this._axisXGenerator.getMod();
+        Object.entries(this._axisXDataMap).forEach(([mod, axisXData]) => {
+            const prevOpacity: number = prevAxisXDataMap[mod].opacity;
+            const opacity = mod >= currentMod ? 1 : 0;
+            axisXData.opacity = (opacity - prevOpacity) * progress.tween + prevOpacity;
         });
     }
 
@@ -357,25 +412,23 @@ export default class LineGraphCanvas implements GraphInterface {
         //context.textAlign = 'center';
         context.translate(0, this._canvasHeight - this._verticalPadding);
 
-        // 1, 2, 4, 8, 16, 32, 64, 128,
-        const itemsCount = endI - beginI + 1;
-
-        const textWidth = 60;
-
-        const count = this._width / textWidth;
-        const mod = MathUtils.minModBy2(itemsCount, count);
-        //console.log(itemsCount / 6);
+        const mods = Object.keys(this._axisXDataMap).map(Number).sort((a, b) => b - a);
 
         const y = this._getCanvasValue(18);
-        items.forEach((item: AxisXItemType, index: number) => {
-            if (index % mod !== 0) {
-                return;
-            }
-            //context.globalAlpha = 1;
+        for (let index = beginI; index <= endI; index += 1) {
+            const item: AxisXItemType = items[index];
             const x = item.index * scaleX - shiftX;
-            context.fillText(item.title, x, y);
-            //context.fillRect(x - this._getCanvasValue(textWidth / 2), 40, this._getCanvasValue(textWidth), 10);
-        });
+
+            mods.some((mod: number) => {
+                if (index % mod !== 0) {
+                    return false;
+                }
+                context.globalAlpha = this._axisXDataMap[mod].opacity;
+                context.fillText(item.title, x, y);
+                return true;
+            });
+        }
+
         context.restore();
     }
 

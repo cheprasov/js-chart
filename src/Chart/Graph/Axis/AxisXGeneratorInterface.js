@@ -13,4 +13,7 @@ export interface AxisXGeneratorInterface {
 
     getAxisXItems(): null | AxisXItemType[];
 
+    getMod(): number;
+
+    getActiveMods(): number;
 }
