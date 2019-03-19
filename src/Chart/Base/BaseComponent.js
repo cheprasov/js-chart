@@ -1,5 +1,4 @@
 import type { BaseComponentInterface } from './BaseComponentInterface';
-import DocumentHelper from '../../Utils/DocumentHelper';
 
 type EventListenerType = {
     element: HTMLElement,

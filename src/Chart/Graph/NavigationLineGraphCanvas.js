@@ -13,21 +13,6 @@ export default class NavigationLineGraphCanvas extends LineGraphCanvas {
         super(options);
     }
 
-    _drawAnimation(newScope: GraphScopeType) {
-        this._animation.stop();
-
-        const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
-        const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
-
-        this._animation.setOnStep((progress: ProgressType) => {
-            this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
-            this._clear();
-            this._draw();
-        });
-
-        this._animation.run();
-    }
-
     _drawLinesAnimation(
         // eslint-disable-next-line no-unused-vars
         progress: ProgressType, newScope: GraphScopeType, prevLineDataMap: LineDataMapType, isNotEmptyGraph: boolean,

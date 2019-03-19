@@ -7,10 +7,10 @@ import DocumentHelper from '../Utils/DocumentHelper';
 import type { ChartInterface } from './ChartInterface';
 import type { NavigationInterface, NavigationScopeType } from './Navigation/NavigationInterface';
 import type { LegendInterface, VisibilityMapType } from './Legend/LegendInterface';
-import type { ViewInterface } from './View/ViewInterface';
+import type { ViewerInterface } from './View/ViewerInterface';
 
 import './Chart.scss';
-import LineView from './View/LineView';
+import LineViewer from './View/LineViewer';
 
 export type ChartLineType = {
     key: string,
@@ -46,7 +46,7 @@ export default class Chart implements ChartInterface {
     _data: ChartDataType;
     _chartLegend: LegendInterface;
     _chartNavigation: NavigationInterface;
-    _chartView: ViewInterface;
+    _chartViewer: ViewerInterface;
 
     constructor(data: ChartDataType, options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
@@ -65,7 +65,7 @@ export default class Chart implements ChartInterface {
         this._chartNavigation.setCallbackOnChangeNavigationScope(this._onChangeNavigationScope.bind(this));
 
         const navigationScope = this._chartNavigation.getNavigationScope();
-        this._chartView = new LineView({
+        this._chartViewer = new LineViewer({
             data,
             visibilityMap,
             navigationScope,
@@ -75,17 +75,17 @@ export default class Chart implements ChartInterface {
 
     _onChangeVisibility(visibilityMap: VisibilityMapType): void {
         this._chartNavigation.setVisibilityMap(visibilityMap);
-        this._chartView.setVisibilityMap(visibilityMap);
+        this._chartViewer.setVisibilityMap(visibilityMap);
     }
 
     _onChangeNavigationScope(navigationScope: NavigationScopeType): void {
-        this._chartView.setNavigationScope(navigationScope);
+        this._chartViewer.setNavigationScope(navigationScope);
     }
 
     render(container: HTMLElement): void {
         const divChart = DocumentHelper.createDivElement('Chart', container);
 
-        this._chartView.render(divChart);
+        this._chartViewer.render(divChart);
         this._chartNavigation.render(divChart);
         this._chartLegend.render(divChart);
     }

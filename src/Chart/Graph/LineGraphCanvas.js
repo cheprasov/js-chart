@@ -10,8 +10,6 @@ import type { GraphInterface } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
-import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
-import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
 
 export type GraphScopeType = {
     maxValue: ?number,
@@ -29,25 +27,6 @@ export type LineDataMapType = {
     [string]: LineDataType
 };
 
-type AxisYDataType = {
-    hash: string,
-    items: AxisYItemType[],
-    scope: GraphScopeType,
-    opacity: number,
-}
-
-type AxisYDataMapType = {
-    [string]: AxisYDataType
-};
-
-type AxisXDataType = {
-    opacity: number,
-}
-
-type AxisXDataMapType = {
-    [number]: AxisXDataType
-};
-
 export type OptionsType = {
     data: ChartDataType,
     visibilityMap: VisibilityMapType,
@@ -58,8 +37,6 @@ export type OptionsType = {
     verticalPaddingRatio?: number,
     animationDuration?: number,
     lineWidth?: number,
-    axisYGenerator?: AxisYGeneratorInterface,
-    axisXGenerator?: AxisXGeneratorInterface,
     renderQualityRatio?: number,
 }
 
@@ -73,12 +50,8 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
     verticalPaddingRatio: 0.2, // 20%
     animationDuration: 200,
     lineWidth: 1.5,
-    axisYGenerator: null,
-    axisXGenerator: null,
     renderQualityRatio: 1,
 };
-
-export const GRAPH_AXIS_X_TEXT_WIDTH = 80;
 
 export default class LineGraphCanvas implements GraphInterface {
 
@@ -94,9 +67,6 @@ export default class LineGraphCanvas implements GraphInterface {
     _verticalPadding: number;
     _renderQualityRatio: number;
 
-    _axisYGenerator: AxisYGeneratorInterface | null = null;
-    _axisXGenerator: AxisXGeneratorInterface | null = null;
-
     _canvas: HTMLCanvasElement;
     _context: CanvasRenderingContext2D;
     _canvasWidth: number;
@@ -104,10 +74,6 @@ export default class LineGraphCanvas implements GraphInterface {
 
     // separate scope for each line is because different animation on task mock
     _lineDataMap: LineDataMapType;
-    _axisYDataMap: AxisYDataMapType;
-    _axisYHash: string;
-    _axisXDataMap: AxisXDataMapType;
-
     _animation: ?WebAnimation;
 
     constructor(options: OptionsType = {}) {
@@ -123,8 +89,6 @@ export default class LineGraphCanvas implements GraphInterface {
         this._renderQualityRatio = Math.min(1, Math.max(0.1, params.renderQualityRatio));
         this._verticalPaddingRatio = params.verticalPaddingRatio;
         this._lineWidth = params.lineWidth;
-        this._axisYGenerator = params.axisYGenerator;
-        this._axisXGenerator = params.axisXGenerator;
 
         this._canvasWidth = Math.round(this._getCanvasValue(this._width));
         this._canvasHeight = Math.round(this._getCanvasValue(this._height));
@@ -138,12 +102,11 @@ export default class LineGraphCanvas implements GraphInterface {
             onStop: this._onAnimationEnd,
             onFinish: this._onAnimationEnd,
         });
+    }
 
+    _init() {
         this._initCanvas();
         this._initLineDataMap();
-        this._initAxisYDataMap();
-        this._initAxisXDataMap();
-        this._draw();
     }
 
     _initCanvas() {
@@ -173,76 +136,9 @@ export default class LineGraphCanvas implements GraphInterface {
         });
     }
 
-    _initAxisYDataMap() {
-        if (!this._axisYGenerator) {
-            return;
-        }
-
-        this._axisYHash = this._axisYGenerator.getHash();
-        this._axisYDataMap = {
-            [this._axisYHash]: {
-                hash: this._axisYHash,
-                items: this._axisYGenerator.getAxisYItems(),
-                scope: this._getGraphScope(),
-                opacity: 1,
-            },
-        };
-    }
-
-    _initAxisXDataMap() {
-        if (!this._axisXGenerator) {
-            return;
-        }
-        const mod = this._axisXGenerator.getMod();
-        this._axisXDataMap = {
-            [mod]: { mod, opacity: 1 },
-        };
-    }
-
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
-        if (this._axisYGenerator) {
-            const prevAxisYHash = this._axisYHash;
-            const prevAxisXMod = this._axisXGenerator.getMod();
-            this._axisYGenerator.setNavigationScope(navigationScope);
-            this._axisXGenerator.setNavigationScope(navigationScope);
-            this._updateAxisYData(prevAxisYHash);
-            this._updateAxisXData(prevAxisXMod);
-        }
         this._drawAnimation(this._getGraphScope());
-    }
-
-    _updateAxisYData(prevAxisYHash: string) {
-        const currentAxisYHash = this._axisYGenerator.getHash();
-        if (!currentAxisYHash || this._axisYDataMap[currentAxisYHash]) {
-            return;
-        }
-
-        Object.keys(this._axisYDataMap).forEach((hash) => {
-            if (hash !== prevAxisYHash && hash !== currentAxisYHash) {
-                delete this._axisYDataMap[hash];
-            }
-        });
-
-        this._axisYHash = currentAxisYHash;
-        this._axisYDataMap[currentAxisYHash] = {
-            hash: currentAxisYHash,
-            items: this._axisYGenerator.getAxisYItems(),
-            scope: { ...this._axisYDataMap[prevAxisYHash].scope },
-            opacity: 0,
-        };
-        this._axisYDataMap[prevAxisYHash].opacity = 1;
-    }
-
-    _updateAxisXData(prevMod: number) {
-        const currentMod = this._axisXGenerator.getMod();
-        if (prevMod === currentMod) {
-            return;
-        }
-
-        this._axisXDataMap[currentMod] = {
-            opacity: currentMod >= prevMod ? 1 : 0,
-        };
     }
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
@@ -261,39 +157,14 @@ export default class LineGraphCanvas implements GraphInterface {
         return prevLineDataMap;
     }
 
-    _getPrevAxisYDataMap(): AxisYDataMapType {
-        const prevAxisYDataMap: AxisYDataMapType = {};
-        Object.entries(this._axisYDataMap).forEach(([hash, axisYData]) => {
-            prevAxisYDataMap[hash] = {
-                ...axisYData,
-                scope: { ...axisYData.scope },
-            };
-        });
-
-        return prevAxisYDataMap;
-    }
-
-    _getPrevAxisXDataMap(): AxisXDataMapType {
-        const prevAxisXDataMap: AxisXDataMapType = {};
-        Object.entries(this._axisXDataMap).forEach(([mod, axisXData]) => {
-            prevAxisXDataMap[mod] = { opacity: axisXData.opacity };
-        });
-
-        return prevAxisXDataMap;
-    }
-
     _drawAnimation(newScope: GraphScopeType) {
         this._animation.stop();
 
         const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
-        const prevAxisYDataMap: AxisYDataMapType = this._getPrevAxisYDataMap();
-        const prevAxisXDataMap: AxisXDataMapType = this._getPrevAxisXDataMap();
         const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
 
         this._animation.setOnStep((progress: ProgressType) => {
             this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
-            this._drawAxisYAnimation(progress, newScope, prevAxisYDataMap, isNotEmptyGraph);
-            this._drawAxisXAnimation(progress, prevAxisXDataMap);
             this._clear();
             this._draw();
         });
@@ -324,49 +195,7 @@ export default class LineGraphCanvas implements GraphInterface {
         });
     }
 
-    _drawAxisYAnimation(
-        progress: ProgressType, newScope: GraphScopeType, prevAxisYDataMap: AxisYDataMapType, isNotEmptyGraph: boolean,
-    ): void {
-        if (!this._axisYGenerator || !isNotEmptyGraph) {
-            return;
-        }
-
-        Object.entries(this._axisYDataMap).forEach(([hash, axisYData]) => {
-            if (!prevAxisYDataMap[hash]) {
-                delete this._axisYDataMap[hash];
-                return;
-            }
-            const prevScope = prevAxisYDataMap[hash].scope;
-            axisYData.scope = {
-                maxValue: (newScope.maxValue - prevScope.maxValue) * progress.tween + prevScope.maxValue,
-                minValue: (newScope.minValue - prevScope.minValue) * progress.tween + prevScope.minValue,
-                scaleY: (newScope.scaleY - prevScope.scaleY) * progress.tween + prevScope.scaleY,
-            };
-            const prevOpacity: number = prevAxisYDataMap[hash].opacity;
-            const opacity = this._axisYHash === hash ? 1 : 0;
-            axisYData.opacity = (opacity - prevOpacity) * progress.tween + prevOpacity;
-        });
-    }
-
-    _drawAxisXAnimation(progress: ProgressType, prevAxisXDataMap: AxisXDataMapType): void {
-        const currentMod = this._axisXGenerator.getMod();
-        Object.entries(this._axisXDataMap).forEach(([mod, axisXData]) => {
-            const prevOpacity: number = prevAxisXDataMap[mod].opacity;
-            const opacity = mod >= currentMod ? 1 : 0;
-            axisXData.opacity = (opacity - prevOpacity) * progress.tween + prevOpacity;
-        });
-    }
-
     _onAnimationEnd() {
-        if (!this._axisYDataMap) {
-            return;
-        }
-
-        Object.keys(this._axisYDataMap).forEach((hash: string) => {
-            if (this._axisYHash !== hash && !this._axisYDataMap[hash].opacity) {
-                delete this._axisYDataMap[hash];
-            }
-        });
     }
 
     _getGraphScope(): GraphScopeType {
@@ -379,6 +208,8 @@ export default class LineGraphCanvas implements GraphInterface {
     }
 
     getGraphElement(): HTMLCanvasElement {
+        this._init();
+        this._draw();
         return this._canvas;
     }
 
@@ -392,88 +223,13 @@ export default class LineGraphCanvas implements GraphInterface {
         const beginI = Math.floor((this._data.length - 1) * minXRatio);
         const endI = Math.ceil((this._data.length - 1) * maxXRatio);
 
-        this._drawAxisYLines();
         this._data.lines.forEach((chartLine: ChartLineType) => {
             this._drawLine(chartLine, scaleX, shiftX, beginI, endI);
         });
-        this._drawAxisYText();
-        this._drawAxisXTitles(scaleX, shiftX, beginI, endI);
     }
 
     _clear(): void {
         this._context.clearRect(0, 0, this._canvasWidth, this._canvasHeight);
-    }
-
-    _drawAxisXTitles(scaleX: number, shiftX: number, beginI: number, endI: number) {
-        const items: AxisXItemType[] = this._axisXGenerator.getAxisXItems();
-
-        const context = this._context;
-        context.save();
-        //context.textAlign = 'center';
-        context.translate(0, this._canvasHeight - this._verticalPadding);
-
-        const mods = Object.keys(this._axisXDataMap).map(Number).sort((a, b) => b - a);
-
-        const y = this._getCanvasValue(18);
-        for (let index = beginI; index <= endI; index += 1) {
-            const item: AxisXItemType = items[index];
-            const x = item.index * scaleX - shiftX;
-
-            mods.some((mod: number) => {
-                if (index % mod !== 0) {
-                    return false;
-                }
-                context.globalAlpha = this._axisXDataMap[mod].opacity;
-                context.fillText(item.title, x, y);
-                return true;
-            });
-        }
-
-        context.restore();
-    }
-
-    _drawAxisYLines() {
-        if (!this._axisYDataMap) {
-            return;
-        }
-        const context = this._context;
-        context.save();
-        context.translate(0, this._canvasHeight - this._verticalPadding);
-        context.strokeStyle = '#dfe6eb';
-        context.lineWidth = this._getCanvasValue(1);
-
-        Object.values(this._axisYDataMap).forEach((axisYData: AxisYDataType) => {
-            context.globalAlpha = axisYData.opacity;
-            context.beginPath();
-
-            axisYData.items.forEach((item: AxisYItemType) => {
-                const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
-                context.moveTo(0, y);
-                context.lineTo(this._canvasWidth, y);
-            });
-
-            context.stroke();
-        });
-        context.restore();
-    }
-
-    _drawAxisYText() {
-        if (!this._axisYDataMap) {
-            return;
-        }
-        const context = this._context;
-        context.save();
-        context.translate(0, this._canvasHeight - this._verticalPadding);
-
-        Object.values(this._axisYDataMap).forEach((axisYData: AxisYDataType) => {
-            context.globalAlpha = axisYData.opacity;
-            axisYData.items.forEach((item: AxisYItemType) => {
-                const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
-
-                context.fillText(item.title, 0, y - this._getCanvasValue(8));
-            });
-        });
-        context.restore();
     }
 
     _drawLine(chartLine: ChartLineType, scaleX: number, shiftX: number, beginI: number, endI: number) {
