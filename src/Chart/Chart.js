@@ -31,14 +31,14 @@ export type ChartDataType = {
 
 type OptionsType = {
     data: ChartDataType,
-    trimZero?: boolean,
+    trimAxisY?: boolean,
     renderQualityRatio?: number,
 };
 
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
     data: null,
-    trimZero: true,
-    renderQualityRatio: 1,
+    trimAxisY: false,
+    renderQualityRatio: 0.75,
 };
 
 export default class Chart implements ChartInterface {
@@ -59,7 +59,7 @@ export default class Chart implements ChartInterface {
         this._chartNavigation = new Navigation({
             data,
             visibilityMap,
-            trimZero: params.trimZero,
+            trimAxisY: params.trimAxisY,
             renderQualityRatio: params.renderQualityRatio,
         });
         this._chartNavigation.setCallbackOnChangeNavigationScope(this._onChangeNavigationScope.bind(this));

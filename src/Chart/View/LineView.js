@@ -2,21 +2,20 @@
 
 import DocumentHelper from '../../Utils/DocumentHelper';
 import LineGraphCanvas from '../Graph/LineGraphCanvas';
-import AxisYGenerator from '../Graph/Axis/AxisYGenerator';
 import AxisXGenerator from '../Graph/Axis/AxisXGenerator';
+import AxisYGenerator from '../Graph/Axis/AxisYGenerator';
 
 import type { ViewInterface } from './ViewInterface';
 import type { ChartDataType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { GraphInterface } from '../Graph/GraphInterface';
-import type { AxisXGeneratorInterface } from '../Graph/Axis/AxisXGeneratorInterface';
-import type { AxisYGeneratorInterface } from '../Graph/Axis/AxisYGeneratorInterface';
 
 import './LineView.scss';
 
 const GRAPH_LINE_WIDTH = 2.5;
-const GRAPH_AXIS_X_COUNT = 6;
+const GRAPH_AXIS_Y_COUNT = 6;
+const GRAPH_AXIS_X_TEXT_WIDTH = 60;
 
 type OptionsType = {
     data: ChartDataType,
@@ -39,8 +38,6 @@ export default class LineView implements ViewInterface {
     _navigationScope: NavigationScopeType;
     _renderQualityRatio: number;
 
-    _axisXGenerator: AxisXGeneratorInterface;
-    _axisYGenerator: AxisYGeneratorInterface;
     _graph: GraphInterface;
 
     constructor(options: OptionsType) {
@@ -50,9 +47,6 @@ export default class LineView implements ViewInterface {
         this._visibilityMap = params.visibilityMap;
         this._navigationScope = params.navigationScope;
         this._renderQualityRatio = params.renderQualityRatio;
-
-        this._axisXGenerator = new AxisXGenerator(GRAPH_AXIS_X_COUNT, params.navigationScope);
-        this._axisYGenerator = new AxisYGenerator(params.data, params.navigationScope);
     }
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
@@ -84,8 +78,8 @@ export default class LineView implements ViewInterface {
             minValue: this._navigationScope.minValue,
             maxValue: this._navigationScope.maxValue,
             lineWidth: GRAPH_LINE_WIDTH,
-            axisXGenerator: this._axisXGenerator,
-            axisYGenerator: this._axisYGenerator,
+            axisYGenerator: new AxisYGenerator(GRAPH_AXIS_Y_COUNT, this._navigationScope),
+            axisXGenerator: new AxisXGenerator(this._data, this._navigationScope, width, GRAPH_AXIS_X_TEXT_WIDTH),
             renderQualityRatio: this._renderQualityRatio,
         });
 

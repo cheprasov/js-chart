@@ -40,14 +40,14 @@ type MoveScrollDataType = {
 type OptionsType = {
     data: ChartDataType,
     visibilityMap: VisibilityMapType,
-    trimZero?: boolean,
+    trimAxisY?: boolean,
     renderQualityRatio?: number,
 };
 
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
     data: null,
     visibilityMap: null,
-    trimZero: false,
+    trimAxisY: false,
     renderQualityRatio: 1,
 };
 
@@ -55,7 +55,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     _data: ChartDataType;
     _graph: GraphInterface;
-    _trimZero: boolean;
+    _trimAxisY: boolean;
     _renderQualityRatio: number;
 
     _divShadowLeft: ?HTMLDivElement;
@@ -76,7 +76,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
         this._data = params.data;
         this._visibilityMap = params.visibilityMap;
-        this._trimZero = params.trimZero;
+        this._trimAxisY = params.trimAxisY;
         this._renderQualityRatio = params.renderQualityRatio;
 
         this._initData();
@@ -109,7 +109,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
     }
 
     getNavigationScope(): NavigationScopeType {
-        if (this._trimZero) {
+        if (this._trimAxisY) {
             return {
                 ...this._navigationScope,
                 //avoid stagger of axis x

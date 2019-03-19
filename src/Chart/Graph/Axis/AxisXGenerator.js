@@ -2,64 +2,66 @@
 
 import type { AxisXGeneratorInterface, AxisXItemType } from './AxisXGeneratorInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
+import type { ChartDataType } from '../../Chart';
+import DateUtils from '../../../Utils/DateUtils';
 import MathUtils from '../../../Utils/MathUtils';
 
 export default class AxisXGenerator implements AxisXGeneratorInterface {
 
-    _count: number;
+    _data: ChartDataType;
     _navigationScope: NavigationScopeType;
-    _cacheAxisXItems: null | AxisXItemType[] = null;
-    _cacheHash: null | string = null;
+    _width: number;
+    _textWidth: number;
 
-    constructor(count: number, navigationScope: NavigationScopeType) {
-        this._count = count;
+    _items: AxisXItemType[] = [];
+
+    constructor(data: ChartDataType, navigationScope: NavigationScopeType, width: number, textWidth: number) {
+        this._data = data;
         this._navigationScope = navigationScope;
+        this._width = width;
+        this._textWidth = textWidth;
+
+        this._generateItems();
+    }
+
+    _generateItems() {
+        this._items = this._data.x.map((value: number, index: number) => {
+            return { title: DateUtils.getMonDate(value), index };
+        });
+
+        // const step = Math.ceil(this._data.length / (count + 1));
+        // const baseIndexes = [];
+        // for (let i = 0; i < this._data.length; i += step) {
+        //     const value = Math.round(i + step / 2);
+        //     if (value <= this._data.length) {
+        //         baseIndexes.push(value);
+        //     }
+        // }
+        //
+        // const stages = [baseIndexes];
+        // const stage = [baseIndexes.];
+        // for (let i = 1; i < baseIndexes.length; i += 1) {
+        //     stage.push(
+        //         MathUtils.average(baseIndexes[i], baseIndexes[i + 1]),
+        //         baseIndexes[i + 1],
+        //     );
+        // }
     }
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
         this._cacheAxisXItems = null;
-        this._cacheHash = null;
     }
 
-    getHash(): null | string {
-        if (!this.getAxisXItems() || !this._cacheAxisXItems) {
-            return null;
-        }
-        if (this._cacheHash) {
-            return this._cacheHash;
-        }
-        this._cacheHash = this._cacheAxisXItems.reduce((result: number[], item: AxisXItemType) => {
-            result.push(item.value);
-            return result;
-        }, []).join('/');
+    //getVisible
 
-        return this._cacheHash;
-    }
-
-    getAxisXItems(): null | AxisXItemType[] {
-        if (!this._navigationScope || this._navigationScope.maxValueSlice === null
-            || this._navigationScope.minValueSlice === null) {
-            return null;
-        }
-
+    getAxisXItems(): AxisXItemType[] {
+        return this._items;
         if (this._cacheAxisXItems) {
             return this._cacheAxisXItems;
         }
 
-        const topValue = MathUtils.largeRound(this._navigationScope.maxValueSlice);
-        const lowValue = MathUtils.largeFloor(this._navigationScope.minValueSlice);
-        const stepValue = Math.round((topValue - lowValue) / (this._count - 1));
-
-        const items: AxisXItemType[] = [];
-
-        for (let i = 0; i < this._count; i += 1) {
-            const value = MathUtils.largeFloor(lowValue + i * stepValue);
-            const title = MathUtils.formatLargeNumber(value);
-            items.push({ value, title });
-        }
-
-        this._cacheAxisXItems = Object.freeze(items);
+        this._cacheAxisXItems = [];
         return this._cacheAxisXItems;
     }
 

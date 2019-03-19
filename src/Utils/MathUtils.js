@@ -21,6 +21,18 @@ export default class MathUtils {
         return a;
     }
 
+    static average(a: number, b: number) {
+        return (a + b) / 2;
+    }
+
+    static minModBy2(value: number, maxLimit: value) {
+        let mod = 1;
+        while (value / mod > maxLimit) {
+            mod *= 2;
+        }
+        return mod;
+    }
+
     /* todo: refactor code */
     static largeRound(value: number, len: number = 2): number {
         if (value > -(10 ** len) && value < (10 ** len)) {
