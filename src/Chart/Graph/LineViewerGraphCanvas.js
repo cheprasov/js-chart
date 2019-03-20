@@ -8,7 +8,8 @@ import type { ChartLineType } from '../Chart';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
-import type { GraphScopeType, LineDataMapType } from './LineGraphCanvas';
+import type { GraphScopeType, LineDataMapType, LineDataType } from './LineGraphCanvas';
+import type { ViewerGraphInterface } from './ViewerGraphInterface';
 
 
 type AxisYDataType = {
@@ -38,7 +39,7 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
 
 export const GRAPH_AXIS_X_TEXT_WIDTH = 80;
 
-export default class LineViewerGraphCanvas extends LineGraphCanvas {
+export default class LineViewerGraphCanvas extends LineGraphCanvas implements ViewerGraphInterface {
 
     _axisYGenerator: AxisYGeneratorInterface | null = null;
     _axisXGenerator: AxisXGeneratorInterface | null = null;
@@ -46,6 +47,8 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
     _axisYDataMap: AxisYDataMapType;
     _axisYHash: string;
     _axisXOpacityMap: AxisXOpacityMapType;
+
+    _selectedIndex: null | number = null;
 
     constructor(options: OptionsType = {}) {
         super(options);
@@ -58,6 +61,14 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
         super._init();
         this._initAxisYDataMap();
         this._initAxisXDataMap();
+    }
+
+    selectByRatio(ratio: number): null | {} {
+        const index = Math.round(
+            ((this._navigationScope.maxXRatio - this._navigationScope.minXRatio) * ratio +this._navigationScope.minXRatio) * this._data.maxIndex,
+        );
+        this._selectedIndex = index;
+        this._draw();
     }
 
     _initAxisYDataMap() {
@@ -155,7 +166,6 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
             this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
             this._drawAxisYAnimation(progress, newScope, prevAxisYDataMap, isNotEmptyGraph);
             this._drawAxisXAnimation(progress, prevAxisXDataMap);
-            this._clear();
             this._draw();
         });
 
@@ -208,14 +218,16 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
     }
 
     _draw(): void {
+        this._clear();
         const minXRatio = this._navigationScope.minXRatio;
         const maxXRatio = this._navigationScope.maxXRatio;
 
-        const scaleX = this._canvasWidth / ((this._data.length - 1) * (maxXRatio - minXRatio));
-        const shiftX = scaleX * (this._data.length - 1) * minXRatio;
+        //const scaleX = this._canvasWidth / (this._data.maxIndex * (maxXRatio - minXRatio));
+        const scaleX = this._getScaleX();
+        const shiftX = this._getShiftX();
 
-        const beginI = Math.floor((this._data.length - 1) * minXRatio);
-        const endI = Math.ceil((this._data.length - 1) * maxXRatio);
+        const beginI = Math.floor(this._data.maxIndex * minXRatio);
+        const endI = Math.ceil(this._data.maxIndex * maxXRatio);
 
         this._drawAxisYLines();
         this._data.lines.forEach((chartLine: ChartLineType) => {
@@ -223,6 +235,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
         });
         this._drawAxisYText();
         this._drawAxisXTitles(scaleX, shiftX, beginI, endI);
+        this._drawSelectedIndex(scaleX, shiftX, beginI, endI);
     }
 
     _drawAxisXTitles(scaleX: number, shiftX: number, beginI: number, endI: number) {
@@ -252,6 +265,42 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas {
             });
         }
 
+        context.restore();
+    }
+
+    _drawSelectedIndex(scaleX: number, shiftX: number, beginI: number, endI: number) {
+        if (this._selectedIndex === null) {
+            return;
+        }
+
+        const context = this._context;
+        context.save();
+        context.translate(0, this._canvasHeight - this._verticalPadding);
+        context.lineWidth = this._getCanvasValue(this._lineWidth);
+        context.fillStyle = '#ffffff';
+
+        const radius: number = context.lineWidth * 2;
+
+        this._data.lines.forEach((chartLine: ChartLineType) => {
+            const lineData: LineDataType = this._lineDataMap[chartLine.key];
+            context.strokeStyle = chartLine.color;
+            context.globalAlpha = lineData.opacity;
+
+            const minValue = lineData.scope.minValue;
+            const scaleY = lineData.scope.scaleY;
+            const index = this._selectedIndex;
+            const value = chartLine.values[index];
+
+            const x = index * scaleX - shiftX;
+            const y = -(value - minValue) * scaleY;
+
+            context.beginPath();
+            context.arc(x, y, radius, 0, 2 * Math.PI);
+            context.fill();
+            context.stroke();
+        });
+
+        //context.stroke();
         context.restore();
     }
 

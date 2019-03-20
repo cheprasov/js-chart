@@ -42,8 +42,8 @@ export default class AxisXGenerator implements AxisXGeneratorInterface {
         if (this._cacheMod) {
             return this._cacheMod;
         }
-        const beginI = Math.floor((this._data.length - 1) * this._navigationScope.minXRatio);
-        const endI = Math.ceil((this._data.length - 1) * this._navigationScope.maxXRatio);
+        const beginI = Math.floor(this._data.maxIndex * this._navigationScope.minXRatio);
+        const endI = Math.ceil(this._data.maxIndex * this._navigationScope.maxXRatio);
 
         const itemsCount = endI - beginI + 1;
         const count = this._width / this._textWidth;

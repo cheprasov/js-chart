@@ -8,12 +8,13 @@ import type { ViewerInterface } from './ViewerInterface';
 import type { ChartDataType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
-import type { GraphInterface } from '../Graph/GraphInterface';
 
 import './LineViewer.scss';
 import LineViewerGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineViewerGraphCanvas';
 import ScreenUtils from '../../Utils/ScreenUtils';
 import BaseComponent from '../Base/BaseComponent';
+import type { ViewerGraphInterface } from '../Graph/ViewerGraphInterface';
+import FunctionUtils from '../../Utils/FunctionUtils';
 
 const GRAPH_LINE_WIDTH = 2.5;
 const GRAPH_AXIS_Y_COUNT = 6;
@@ -39,7 +40,7 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
     _navigationScope: NavigationScopeType;
     _renderQualityRatio: number;
 
-    _graph: GraphInterface;
+    _graph: ViewerGraphInterface;
 
     constructor(options: OptionsType) {
         super();
@@ -92,16 +93,23 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
         this._addEvents(graphElement);
     }
 
-    _addEvents(graphElement: HTMLCanvasElement) {
+    _addEvents(graphElement: HTMLElement) {
         if (ScreenUtils.isTouchScreen()) {
 
         } else {
-            this.addEventListener(graphElement, 'mousemove', this._onMouseMove.bind(this));
+            this._selectGraphElement = FunctionUtils.debounce(this._selectGraphElement.bind(this), 0);
+            this.addEventListener(graphElement, 'mousemove', this._onMouseMove.bind(this, graphElement));
         }
     }
 
-    _onMouseMove(event: MouseEvent) {
+    _selectGraphElement(ratio: number) {
+       this._graph.selectByRatio(ratio);
+    }
 
+    _onMouseMove(graphElement: HTMLElement, event: MouseEvent) {
+        const bounds: DOMRect = graphElement.getBoundingClientRect();
+        const x = event.clientX - bounds.left;
+        this._selectGraphElement(x / bounds.width);
     }
 
 }

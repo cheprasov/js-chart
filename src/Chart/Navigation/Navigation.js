@@ -172,8 +172,8 @@ export default class Navigation extends BaseComponent implements NavigationInter
             .map((line: ChartLineType) => line.values);
         const minMaxValue: MinMaxValueType = ArrayUtils.getMinMaxValueBySliceArrays(
             values,
-            Math.round(this._navigationScope.minXRatio * (this._data.length - 1)),
-            Math.round(this._navigationScope.maxXRatio * (this._data.length - 1)),
+            Math.round(this._navigationScope.minXRatio * this._data.maxIndex),
+            Math.round(this._navigationScope.maxXRatio * this._data.maxIndex),
         );
         this._navigationScope.minValueSlice = minMaxValue.minValue;
         this._navigationScope.maxValueSlice = minMaxValue.maxValue;

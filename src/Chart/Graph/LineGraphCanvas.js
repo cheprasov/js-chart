@@ -18,7 +18,7 @@ export type GraphScopeType = {
     scaleY: ?number,
 }
 
-type LineDataType = {
+export type LineDataType = {
     scope: GraphScopeType,
     opacity: number,
 };
@@ -165,7 +165,6 @@ export default class LineGraphCanvas implements GraphInterface {
 
         this._animation.setOnStep((progress: ProgressType) => {
             this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
-            this._clear();
             this._draw();
         });
 
@@ -207,6 +206,16 @@ export default class LineGraphCanvas implements GraphInterface {
         };
     }
 
+    _getScaleX(): number {
+        return this._canvasWidth / (this._navigationScope.maxXRatio - this._navigationScope.minXRatio)
+            / this._data.maxIndex;
+    }
+
+    _getShiftX(): number {
+        return this._canvasWidth / (this._navigationScope.maxXRatio - this._navigationScope.minXRatio)
+            * this._navigationScope.minXRatio;
+    }
+
     getGraphElement(): HTMLCanvasElement {
         this._init();
         this._draw();
@@ -214,17 +223,15 @@ export default class LineGraphCanvas implements GraphInterface {
     }
 
     _draw(): void {
+        this._clear();
         const minXRatio = this._navigationScope.minXRatio;
         const maxXRatio = this._navigationScope.maxXRatio;
 
-        const scaleX = this._canvasWidth / ((this._data.length - 1) * (maxXRatio - minXRatio));
-        const shiftX = scaleX * (this._data.length - 1) * minXRatio;
-
-        const beginI = Math.floor((this._data.length - 1) * minXRatio);
-        const endI = Math.ceil((this._data.length - 1) * maxXRatio);
+        const beginI = Math.floor(this._data.maxIndex * minXRatio);
+        const endI = Math.ceil(this._data.maxIndex * maxXRatio);
 
         this._data.lines.forEach((chartLine: ChartLineType) => {
-            this._drawLine(chartLine, scaleX, shiftX, beginI, endI);
+            this._drawLine(chartLine, this._getScaleX(), this._getShiftX(), beginI, endI);
         });
     }
 

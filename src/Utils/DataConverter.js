@@ -1,4 +1,4 @@
-import type { ChartLineType, ChartDataType } from '../Chart/SimpleChart';
+import type { ChartLineType, ChartDataType } from '../Chart/Chart';
 
 const CHART_DATA_TYPE_X = 'x';
 const CHART_DATA_TYPE_LINE = 'line';
@@ -47,6 +47,7 @@ export default class DataConverter {
                 if (!chartObjects.x) {
                     chartObjects.x = data;
                     chartObjects.length = data.length;
+                    chartObjects.maxIndex = data.length - 1;
                 }
             }
         });

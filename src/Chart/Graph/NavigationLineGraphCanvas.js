@@ -47,10 +47,11 @@ export default class NavigationLineGraphCanvas extends LineGraphCanvas {
     }
 
     _draw(): void {
-        const scaleX = this._canvasWidth / (this._data.length - 1);
+        this._clear();
+        const scaleX = this._canvasWidth / this._data.maxIndex;
 
         this._data.lines.forEach((chartLine: ChartLineType) => {
-            this._drawLine(chartLine, scaleX, 0, 0, this._data.length - 1);
+            this._drawLine(chartLine, scaleX, 0, 0, this._data.maxIndex);
         });
     }
 

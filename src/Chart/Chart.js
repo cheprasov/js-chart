@@ -11,6 +11,7 @@ import type { ViewerInterface } from './View/ViewerInterface';
 
 import './Chart.scss';
 import LineViewer from './View/LineViewer';
+// import FunctionUtils from '../Utils/FunctionUtils';
 
 export type ChartLineType = {
     key: string,
@@ -25,6 +26,7 @@ export type ChartDataType = {
     lines: ChartLineType[],
     x: number[],
     length: number,
+    maxIndex: number,
     minValue: number,
     maxValue: number,
 };
@@ -69,8 +71,12 @@ export default class Chart implements ChartInterface {
             data,
             visibilityMap,
             navigationScope,
-            renderQualityRatio: params.renderQualityRatio
+            renderQualityRatio: params.renderQualityRatio,
         });
+
+        // this._setNavigationScopeToChartViewerDebounced = FunctionUtils.debounce((navScope: NavigationScopeType) => {
+        //     this._chartViewer.setNavigationScope(navScope);
+        // }, 10);
     }
 
     _onChangeVisibility(visibilityMap: VisibilityMapType): void {
@@ -80,6 +86,7 @@ export default class Chart implements ChartInterface {
 
     _onChangeNavigationScope(navigationScope: NavigationScopeType): void {
         this._chartViewer.setNavigationScope(navigationScope);
+        //this._setNavigationScopeToChartViewerDebounced(navigationScope);
     }
 
     render(container: HTMLElement): void {
