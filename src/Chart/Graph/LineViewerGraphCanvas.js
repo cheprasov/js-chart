@@ -9,8 +9,7 @@ import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
 import type { GraphScopeType, LineDataMapType, LineDataType } from './LineGraphCanvas';
-import type { ViewerGraphInterface } from './ViewerGraphInterface';
-
+import type { StyleType, ViewerGraphInterface } from './ViewerGraphInterface';
 
 type AxisYDataType = {
     hash: string,
@@ -30,11 +29,13 @@ type AxisXOpacityMapType = {
 export type OptionsType = {
     axisYGenerator?: AxisYGeneratorInterface,
     axisXGenerator?: AxisXGeneratorInterface,
+    style: StyleType,
 }
 
 const DEFAULT_CONSTRUCTOR_PARAMS = {
     axisYGenerator: null,
     axisXGenerator: null,
+    style: {},
 };
 
 export const GRAPH_AXIS_X_TEXT_WIDTH = 80;
@@ -51,18 +52,25 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
     _axisXOpacityMap: AxisXOpacityMapType;
 
     _selectedIndex: null | number = null;
+    _style: StyleType;
 
     constructor(options: OptionsType = {}) {
         super(options);
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
         this._axisYGenerator = params.axisYGenerator;
         this._axisXGenerator = params.axisXGenerator;
+        this.setStyles(params.style);
     }
 
     _init() {
         super._init();
         this._initAxisYDataMap();
         this._initAxisXDataMap();
+    }
+
+    _initCanvas() {
+        super._initCanvas();
+        this._context.fillStyle = this._style.fillStyle;
     }
 
     selectIndexByRatio(ratio: number): null | number {
@@ -79,6 +87,14 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
     unselectIndex(): void {
         this._selectedIndex = null;
         this._draw();
+    }
+
+    setStyles(style: StyleType): void {
+        this._style = style;
+        if (this._context) {
+            this._context.fillStyle = style.fillStyle;
+            this._draw();
+        }
     }
 
     _initAxisYDataMap() {
@@ -290,7 +306,8 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         context.save();
         context.translate(0, this._canvasHeight - this._verticalPadding);
 
-        context.strokeStyle = '#dfe6eb';
+        context.strokeStyle = this._style.axisXStyle;
+        context.fillStyle = this._style.backgroundColor;
         context.lineWidth = this._getCanvasValue(1);
 
         context.beginPath();
@@ -299,24 +316,25 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         context.stroke();
 
         context.lineWidth = this._getCanvasValue(this._lineWidth);
-        context.fillStyle = '#ffffff';
 
-        const radius: number = context.lineWidth * 2;
+        const radius: number = context.lineWidth * 1.65;
 
         this._data.lines.forEach((chartLine: ChartLineType) => {
             const lineData: LineDataType = this._lineDataMap[chartLine.key];
-            context.strokeStyle = chartLine.color;
-            context.globalAlpha = lineData.opacity;
 
             const minValue = lineData.scope.minValue;
             const scaleY = lineData.scope.scaleY;
             const value = chartLine.values[index];
             const y = -(value - minValue) * scaleY;
 
+            context.strokeStyle = chartLine.color;
+            context.globalAlpha = lineData.opacity;
+
             context.beginPath();
             context.arc(x, y, radius, 0, 2 * Math.PI);
             context.fill();
             context.stroke();
+
         });
 
         //context.stroke();
@@ -330,7 +348,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         const context = this._context;
         context.save();
         context.translate(0, this._canvasHeight - this._verticalPadding);
-        context.strokeStyle = '#dfe6eb';
+        context.strokeStyle = this._style.axisYStyle;
         context.lineWidth = this._getCanvasValue(1);
 
         Object.values(this._axisYDataMap).forEach((axisYData: AxisYDataType) => {

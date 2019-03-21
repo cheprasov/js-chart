@@ -1,9 +1,5 @@
 @import '../../constants';
 
-$navShadowColor: #ecf3f7;
-$navShadowOpacity: 0.85;
-$navBorderColor: rgba(90, 118, 156, 0.25);
-
 .Navigation {
   position: relative;
   display: block;
@@ -11,7 +7,7 @@ $navBorderColor: rgba(90, 118, 156, 0.25);
   height: 50px;
   overflow: hidden;
   box-sizing: border-box;
-  margin-bottom: $chartBlockMargin;
+  margin-bottom: $Chart-Block-Margin;
 
   &-Graph {
     width: 100%;
@@ -22,8 +18,13 @@ $navBorderColor: rgba(90, 118, 156, 0.25);
     position: absolute;
     top: 0;
     height: 100%;
-    background-color: $navShadowColor;
-    opacity: $navShadowOpacity;
+    background-color: $ThemeDay-Navigation-Shadow-backgroundColor;
+    opacity: $ThemeDay-Navigation-Shadow-opacity;
+
+    #{$ThemeNight-className} & {
+      background-color: $ThemeNight-Navigation-Shadow-backgroundColor;
+      opacity: $ThemeNight-Navigation-Shadow-opacity;
+    }
   }
 
   &-Shadow-Left {
@@ -44,10 +45,17 @@ $navBorderColor: rgba(90, 118, 156, 0.25);
     right: 0;
     height: 100%;
     width: auto;
-    border-top: 2px solid $navBorderColor;
-    border-bottom: 2px solid $navBorderColor;
-    border-left: 6px solid $navBorderColor;
-    border-right: 6px solid $navBorderColor;
+    border-top: 2px solid $ThemeDay-Navigation-Scroll-borderColor;
+    border-bottom: 2px solid $ThemeDay-Navigation-Scroll-borderColor;
+    border-left: 6px solid $ThemeDay-Navigation-Scroll-borderColor;
+    border-right: 6px solid $ThemeDay-Navigation-Scroll-borderColor;
+
+    #{$ThemeNight-className} & {
+      border-top: 2px solid $ThemeNight-Navigation-Scroll-borderColor;
+      border-bottom: 2px solid $ThemeNight-Navigation-Scroll-borderColor;
+      border-left: 6px solid $ThemeNight-Navigation-Scroll-borderColor;
+      border-right: 6px solid $ThemeNight-Navigation-Scroll-borderColor;
+    }
 
     &-Left, &-Right {
       cursor: ew-resize;

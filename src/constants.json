@@ -1,0 +1,20 @@
+{
+  "Theme": {
+    "Day": {
+      "Graph": {
+        "fillStyle": "#96a2aa",
+        "axisYStyle": "#dfe6eb",
+        "axisXStyle": "#dfe6eb",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "Night": {
+      "Graph": {
+        "fillStyle": "#546778",
+        "axisYStyle": "#313d4d",
+        "axisXStyle": "#3b4a5a",
+        "backgroundColor": "#242f3e"
+      }
+    }
+  }
+}

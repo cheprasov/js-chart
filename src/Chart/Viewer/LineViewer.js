@@ -4,19 +4,21 @@ import DocumentHelper from '../../Utils/DocumentHelper';
 import AxisXGenerator from '../Graph/Axis/AxisXGenerator';
 import AxisYGenerator from '../Graph/Axis/AxisYGenerator';
 
+import LineViewerGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineViewerGraphCanvas';
+import ScreenUtils from '../../Utils/ScreenUtils';
+import BaseComponent from '../Base/BaseComponent';
+import EventHelper from '../../Utils/EventHelper';
+import InfoBox from './Infobox/InfoBox';
+import Constants from '../../constants';
+
 import type { ViewerInterface } from './ViewerInterface';
 import type { ChartDataType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
+import type { ViewerGraphInterface } from '../Graph/ViewerGraphInterface';
+import type { InfoBoxInterface } from './Infobox/InfoBoxInterface';
 
 import './LineViewer.scss';
-import LineViewerGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineViewerGraphCanvas';
-import ScreenUtils from '../../Utils/ScreenUtils';
-import BaseComponent from '../Base/BaseComponent';
-import type { ViewerGraphInterface } from '../Graph/ViewerGraphInterface';
-import EventHelper from '../../Utils/EventHelper';
-import type { InfoBoxInterface } from './Infobox/InfoBoxInterface';
-import InfoBox from './Infobox/InfoBox';
 
 const GRAPH_LINE_WIDTH = 2.5;
 const GRAPH_AXIS_Y_COUNT = 6;
@@ -93,6 +95,7 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
             axisYGenerator: new AxisYGenerator(GRAPH_AXIS_Y_COUNT, this._navigationScope),
             axisXGenerator: new AxisXGenerator(this._data, this._navigationScope, width, GRAPH_AXIS_X_TEXT_WIDTH),
             renderQualityRatio: this._renderQualityRatio,
+            style: Constants.Theme.Day.Graph,
         });
 
         const graphElement = this._graph.getGraphElement();
@@ -144,4 +147,7 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
         this._selectGraphElement(x / bounds.width);
     }
 
+    switchNightTheme(enable: boolean): void {
+        this._graph.setStyles(enable ? Constants.Theme.Night.Graph : Constants.Theme.Day.Graph);
+    }
 }

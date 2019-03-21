@@ -14,6 +14,7 @@ import ArrayUtils from '../../Utils/ArrayUtils';
 import ScreenUtils from '../../Utils/ScreenUtils';
 import NavigationLineGraphCanvas from '../Graph/NavigationLineGraphCanvas';
 import MathUtils from '../../Utils/MathUtils';
+import EventHelper from '../../Utils/EventHelper';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -240,16 +241,10 @@ export default class Navigation extends BaseComponent implements NavigationInter
         this.addEventListener(document, eventEndType, this._onTouchEndScroll.bind(this));
     }
 
-    _onTouchStartScroll(event: TouchEvent, scrollType: MoveTypeType) {
-        let clientX;
-
-        if (event.touches) {
-            if (!event.touches || event.touches.length !== 1) {
-                return;
-            }
-            clientX = event.touches[0].clientX;
-        } else if (event instanceof MouseEvent) {
-            clientX = event.clientX;
+    _onTouchStartScroll(event: TouchEvent | MouseEvent, scrollType: MoveTypeType) {
+        const clientX = EventHelper.getClientX(event);
+        if (clientX === null) {
+            return;
         }
 
         this._moveScrollData = {
@@ -269,11 +264,9 @@ export default class Navigation extends BaseComponent implements NavigationInter
             return;
         }
 
-        let clientX;
-        if (event.touches) {
-            clientX = event.touches[0].clientX;
-        } else if (event instanceof MouseEvent) {
-            clientX = event.clientX;
+        const clientX = EventHelper.getClientX(event);
+        if (clientX === null) {
+            return;
         }
 
         const shiftX = Math.round(clientX - this._moveScrollData.clientX);

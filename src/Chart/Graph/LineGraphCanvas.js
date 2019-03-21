@@ -117,7 +117,6 @@ export default class LineGraphCanvas implements GraphInterface {
         this._context = this._canvas.getContext('2d');
         this._context.lineJoin = 'bevel';
         this._context.lineCap = 'butt';
-        this._context.fillStyle = '#96a2aa';
         this._context.font = `${this._getCanvasValue(16)}px Arial`;
     }
 

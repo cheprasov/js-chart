@@ -1,19 +1,49 @@
+
+/* Chart CSS Setting */
+$Chart-className: #{'.'}Chart;
+$Chart-transitionTime: 200ms;
+$Chart-Block-Margin: 22px;
+
 /* Font */
+$Chart-fontFamily: 'Open Sans', 'Lucida Grande', 'Lucida Sans Unicode', Arial, Helvetica, Verdana, sans-serif;
+$Chart-fontSize: 1rem;
+$Chart-lineHeight: 1.2rem;
+$Chart-font: $Chart-fontSize#{'/'}$Chart-lineHeight $Chart-fontFamily;
 
-$fontFamily: 'Open Sans', 'Lucida Grande', 'Lucida Sans Unicode', Arial, Helvetica, Verdana, sans-serif;
-$fontSize: 1rem;
-$lineHeight: 1.2rem;
+/* Theme Day */
+$ThemeDay-color: #222222;
+$ThemeDay-borderColor: #e6ecf0;
+$ThemeDay-backgroundColor: #ffffff;
 
-$font: $fontSize#{'/'}$lineHeight $fontFamily;
+$ThemeDay-Title-color: $ThemeDay-color;
 
-/* Spaces */
+$ThemeDay-Legend-borderColor: $ThemeDay-borderColor;
+$ThemeDay-Legend-color: #43484b;
 
-$chartBlockMargin: 22px;
+$ThemeDay-Navigation-Shadow-backgroundColor: #ecf3f7;
+$ThemeDay-Navigation-Shadow-opacity: 0.85;
+$ThemeDay-Navigation-Scroll-borderColor: rgba(90, 118, 156, 0.25);
 
-/* Colours */
+$ThemeDay-InfoBox-backgroundColor: $ThemeDay-backgroundColor;
+$ThemeDay-InfoBox-borderColor: #d8d8d8;
+$ThemeDay-InfoBox-Date-color: $ThemeDay-color;
 
-$borderColor: #e6ecf0;
-$fontColorDefault: #43484b;
+/* Theme Night */
+$ThemeNight-className: #{$Chart-className}#{'.'}ThemeNight;
 
-$backgroundWhite: #fff;
+$ThemeNight-color: #ffffff;
+$ThemeNight-borderColor: #344658;
+$ThemeNight-backgroundColor: #242f3e;
 
+$ThemeNight-Title-color: $ThemeNight-color;
+
+$ThemeNight-Legend-borderColor: $ThemeNight-borderColor;
+$ThemeNight-Legend-color: #e8ecee;
+
+$ThemeNight-Navigation-Shadow-backgroundColor: #171e27;
+$ThemeNight-Navigation-Shadow-opacity: 0.75;
+$ThemeNight-Navigation-Scroll-borderColor: rgba(106, 143, 179, 0.45);
+
+$ThemeNight-InfoBox-backgroundColor: #253241;
+$ThemeNight-InfoBox-borderColor: #202a37;
+$ThemeNight-InfoBox-Date-color: $ThemeNight-color;

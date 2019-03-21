@@ -35,13 +35,18 @@ type OptionsType = {
     data: ChartDataType,
     trimAxisY?: boolean,
     renderQualityRatio?: number,
+    title?: string;
 };
 
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
     data: null,
     trimAxisY: false,
     renderQualityRatio: 0.75,
+    title: '',
 };
+
+const CHART_CLASS_NAME = 'Chart';
+const THEME_NIGHT_CLASS_NAME = 'ThemeNight';
 
 export default class Chart implements ChartInterface {
 
@@ -49,10 +54,13 @@ export default class Chart implements ChartInterface {
     _chartLegend: LegendInterface;
     _chartNavigation: NavigationInterface;
     _chartViewer: ViewerInterface;
+    _divChart: HTMLDivElement | null;
+    _title: string = '';
 
     constructor(data: ChartDataType, options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
         this._data = data;
+        this._title = params.title;
 
         this._chartLegend = new Legend(data);
         this._chartLegend.setCallbackOnChangeVisibility(this._onChangeVisibility.bind(this));
@@ -90,11 +98,26 @@ export default class Chart implements ChartInterface {
     }
 
     render(container: HTMLElement): void {
-        const divChart = DocumentHelper.createDivElement('Chart', container);
+        this._divChart = DocumentHelper.createDivElement(CHART_CLASS_NAME, container);
+        if (this._title) {
+            const divTitle = DocumentHelper.createDivElement(`${CHART_CLASS_NAME}-Title`, this._divChart);
+            divTitle.appendChild(document.createTextNode(this._title));
+        }
+        this._chartViewer.render(this._divChart);
+        this._chartNavigation.render(this._divChart);
+        this._chartLegend.render(this._divChart);
+    }
 
-        this._chartViewer.render(divChart);
-        this._chartNavigation.render(divChart);
-        this._chartLegend.render(divChart);
+    switchNightTheme(enable: boolean): void {
+        if (!this._divChart) {
+            return;
+        }
+        if (enable) {
+            this._divChart.classList.add(THEME_NIGHT_CLASS_NAME);
+        } else {
+            this._divChart.classList.remove(THEME_NIGHT_CLASS_NAME);
+        }
+        this._chartViewer.switchNightTheme(enable);
     }
 
 }
