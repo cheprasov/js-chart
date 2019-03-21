@@ -1,0 +1,42 @@
+
+.InfoBox {
+  display: none;
+  position: absolute;
+  top: 0;
+  box-sizing: border-box;
+  padding: 14px 0 0 16px;
+  border: 1px solid #d8d8d8;
+  border-radius: 10px;
+  box-shadow: 0 2px 3px #d8d8d8;
+  background-color: #ffffff;
+
+  &.visible {
+    display: block;
+  }
+
+  &-Date {
+    width: 100%;
+    font-size: 1rem;
+    color: #222222;
+    margin: 0 16px 16px 0;
+  }
+
+  &-Item {
+    display: none;
+    margin: 0 16px 10px 0;
+
+    &.visible {
+      display: inline-block;
+    }
+
+    &-Value {
+      font-weight: bold;
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+    }
+
+    &-Title {
+      font-size: 0.9rem;
+    }
+  }
+}

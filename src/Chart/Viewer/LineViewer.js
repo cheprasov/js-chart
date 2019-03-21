@@ -14,7 +14,9 @@ import LineViewerGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineVie
 import ScreenUtils from '../../Utils/ScreenUtils';
 import BaseComponent from '../Base/BaseComponent';
 import type { ViewerGraphInterface } from '../Graph/ViewerGraphInterface';
-import FunctionUtils from '../../Utils/FunctionUtils';
+import EventHelper from '../../Utils/EventHelper';
+import type { InfoBoxInterface } from './Infobox/InfoBoxInterface';
+import InfoBox from './Infobox/InfoBox';
 
 const GRAPH_LINE_WIDTH = 2.5;
 const GRAPH_AXIS_Y_COUNT = 6;
@@ -41,6 +43,9 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
     _renderQualityRatio: number;
 
     _graph: ViewerGraphInterface;
+    _infoBox: InfoBoxInterface;
+
+    _isMouseDown: boolean = false;
 
     constructor(options: OptionsType) {
         super();
@@ -50,10 +55,13 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
         this._visibilityMap = params.visibilityMap;
         this._navigationScope = params.navigationScope;
         this._renderQualityRatio = params.renderQualityRatio;
+
+        this._infoBox = new InfoBox({ data: params.data, visibilityMap: params.visibilityMap });
     }
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
+        this._infoBox.setNavigationScope(navigationScope);
         if (this._graph) {
             this._graph.setNavigationScope(navigationScope);
         }
@@ -61,6 +69,7 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
 
     setVisibilityMap(visibilityMap: VisibilityMapType): void {
         this._visibilityMap = visibilityMap;
+        this._infoBox.setVisibilityMap(visibilityMap);
         if (this._graph) {
             this._graph.setVisibilityMap(visibilityMap);
         }
@@ -87,28 +96,51 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
         });
 
         const graphElement = this._graph.getGraphElement();
-        graphElement.classList.add('Navigation-Graph');
+        graphElement.classList.add('LineViewer-Graph');
         divView.appendChild(graphElement);
+
+        this._infoBox.render(divView);
 
         this._addEvents(graphElement);
     }
 
-    _addEvents(graphElement: HTMLElement) {
-        if (ScreenUtils.isTouchScreen()) {
-
-        } else {
-            this._selectGraphElement = FunctionUtils.debounce(this._selectGraphElement.bind(this), 0);
-            this.addEventListener(graphElement, 'mousemove', this._onMouseMove.bind(this, graphElement));
-        }
-    }
-
     _selectGraphElement(ratio: number) {
-       this._graph.selectByRatio(ratio);
+        const index = this._graph.selectIndexByRatio(ratio);
+        this._infoBox.showInfo(index);
+        this._infoBox.move(ratio);
     }
 
-    _onMouseMove(graphElement: HTMLElement, event: MouseEvent) {
+    _addEvents(graphElement: HTMLElement) {
+        const isTouchScreen = ScreenUtils.isTouchScreen();
+        const eventTypes = isTouchScreen ? ['touchmove', 'touchstart'] : ['mousemove'];
+        //this._selectGraphElement = FunctionUtils.debounce(this._selectGraphElement.bind(this), 0);
+
+        this._onGraphMove = this._onGraphMove.bind(this, graphElement, isTouchScreen);
+        this.addEventListener(graphElement, eventTypes, this._onGraphMove);
+
+        if (!isTouchScreen) {
+            this.addEventListener(graphElement, 'mousedown', (event: MouseEvent) => {
+                this._isMouseDown = true;
+                this._onGraphMove(event);
+            });
+            this.addEventListener(document, 'mouseup', () => {
+                this._isMouseDown = false;
+            });
+        }
+
+        this._infoBox.setCallbackOnClose(this._graph.unselectIndex.bind(this._graph));
+    }
+
+    _onGraphMove(graphElement: HTMLElement, isTouchScreen: boolean, event: MouseEvent | TouchEvent) {
+        if (!isTouchScreen && !this._isMouseDown) {
+            return;
+        }
+        const clientX = EventHelper.getClientX(event);
+        if (clientX === null) {
+            return;
+        }
         const bounds: DOMRect = graphElement.getBoundingClientRect();
-        const x = event.clientX - bounds.left;
+        const x = clientX - bounds.left;
         this._selectGraphElement(x / bounds.width);
     }
 

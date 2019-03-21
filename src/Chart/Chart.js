@@ -7,10 +7,10 @@ import DocumentHelper from '../Utils/DocumentHelper';
 import type { ChartInterface } from './ChartInterface';
 import type { NavigationInterface, NavigationScopeType } from './Navigation/NavigationInterface';
 import type { LegendInterface, VisibilityMapType } from './Legend/LegendInterface';
-import type { ViewerInterface } from './View/ViewerInterface';
+import type { ViewerInterface } from './Viewer/ViewerInterface';
 
 import './Chart.scss';
-import LineViewer from './View/LineViewer';
+import LineViewer from './Viewer/LineViewer';
 // import FunctionUtils from '../Utils/FunctionUtils';
 
 export type ChartLineType = {

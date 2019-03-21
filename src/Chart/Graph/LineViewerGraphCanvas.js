@@ -39,6 +39,8 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
 
 export const GRAPH_AXIS_X_TEXT_WIDTH = 80;
 
+const GRAPH_AXIS_X_TOP: number = 8;
+
 export default class LineViewerGraphCanvas extends LineGraphCanvas implements ViewerGraphInterface {
 
     _axisYGenerator: AxisYGeneratorInterface | null = null;
@@ -63,11 +65,19 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         this._initAxisXDataMap();
     }
 
-    selectByRatio(ratio: number): null | {} {
+    selectIndexByRatio(ratio: number): null | number {
         const index = Math.round(
-            ((this._navigationScope.maxXRatio - this._navigationScope.minXRatio) * ratio +this._navigationScope.minXRatio) * this._data.maxIndex,
+            ((this._navigationScope.maxXRatio - this._navigationScope.minXRatio) * ratio + this._navigationScope.minXRatio)
+            * this._data.maxIndex,
         );
         this._selectedIndex = index;
+        this._draw();
+
+        return index;
+    }
+
+    unselectIndex(): void {
+        this._selectedIndex = null;
         this._draw();
     }
 
@@ -268,14 +278,26 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         context.restore();
     }
 
-    _drawSelectedIndex(scaleX: number, shiftX: number, beginI: number, endI: number) {
+    _drawSelectedIndex(scaleX: number, shiftX: number) {
         if (this._selectedIndex === null) {
             return;
         }
 
+        const index = this._selectedIndex;
+        const x = index * scaleX - shiftX;
+
         const context = this._context;
         context.save();
         context.translate(0, this._canvasHeight - this._verticalPadding);
+
+        context.strokeStyle = '#dfe6eb';
+        context.lineWidth = this._getCanvasValue(1);
+
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, -this._canvasHeight + this._verticalPadding);
+        context.stroke();
+
         context.lineWidth = this._getCanvasValue(this._lineWidth);
         context.fillStyle = '#ffffff';
 
@@ -288,10 +310,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
 
             const minValue = lineData.scope.minValue;
             const scaleY = lineData.scope.scaleY;
-            const index = this._selectedIndex;
             const value = chartLine.values[index];
-
-            const x = index * scaleX - shiftX;
             const y = -(value - minValue) * scaleY;
 
             context.beginPath();
@@ -342,7 +361,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             axisYData.items.forEach((item: AxisYItemType) => {
                 const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
 
-                context.fillText(item.title, 0, y - this._getCanvasValue(8));
+                context.fillText(item.title, 0, y - this._getCanvasValue(GRAPH_AXIS_X_TOP));
             });
         });
         context.restore();
