@@ -86,8 +86,8 @@ export default class LineGraphCanvas implements GraphInterface {
         this._width = params.width;
         this._height = params.height;
         this._devicePixelRatio = params.devicePixelRatio;
-        this._renderQualityRatio = Math.min(1, Math.max(0.1, params.renderQualityRatio));
         this._verticalPaddingRatio = params.verticalPaddingRatio;
+        this._renderQualityRatio = Math.min(1, Math.max(0.1, params.renderQualityRatio));
         this._lineWidth = params.lineWidth;
 
         this._canvasWidth = Math.round(this._getCanvasValue(this._width));
@@ -121,7 +121,8 @@ export default class LineGraphCanvas implements GraphInterface {
     }
 
     _getCanvasValue(value: number) {
-        return this._devicePixelRatio * this._renderQualityRatio * value;
+        // todo: think about it
+        return ((this._devicePixelRatio - 1) * this._renderQualityRatio + 1) * value;
     }
 
     _initLineDataMap() {

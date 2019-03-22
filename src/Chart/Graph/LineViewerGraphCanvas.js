@@ -6,14 +6,13 @@ import LineGraphCanvas from './LineGraphCanvas';
 
 import type { ChartLineType } from '../Chart';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
-import type { AxisYGeneratorInterface, AxisYItemType } from './Axis/AxisYGeneratorInterface';
+import type { AxisYGeneratorInterface, AxisYItemsMapType, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
 import type { GraphScopeType, LineDataMapType, LineDataType } from './LineGraphCanvas';
 import type { StyleType, ViewerGraphInterface } from './ViewerGraphInterface';
 
 type AxisYDataType = {
-    hash: string,
-    items: AxisYItemType[],
+    item: AxisYItemType,
     scope: GraphScopeType,
     opacity: number,
 }
@@ -48,7 +47,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
     _axisXGenerator: AxisXGeneratorInterface | null = null;
 
     _axisYDataMap: AxisYDataMapType;
-    _axisYHash: string;
+    _axisYItemsMap: AxisYItemsMapType;
     _axisXOpacityMap: AxisXOpacityMapType;
 
     _selectedIndex: null | number = null;
@@ -102,15 +101,16 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             return;
         }
 
-        this._axisYHash = this._axisYGenerator.getHash();
-        this._axisYDataMap = {
-            [this._axisYHash]: {
-                hash: this._axisYHash,
-                items: this._axisYGenerator.getAxisYItems(),
+        this._axisYItemsMap = this._axisYGenerator.getAxisYItemsMap();
+
+        this._axisYDataMap = {};
+        Object.keys(this._axisYItemsMap).forEach((key) => {
+            this._axisYDataMap[key] = {
+                item: this._axisYItemsMap[key],
                 scope: this._getGraphScope(),
                 opacity: 1,
-            },
-        };
+            };
+        });
     }
 
     _initAxisXDataMap() {
@@ -124,36 +124,43 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
         if (this._axisYGenerator) {
-            const prevAxisYHash = this._axisYHash;
+            const prevAxisYItemsMap = this._axisYGenerator.getAxisYItemsMap();
             const prevAxisXMod = this._axisXGenerator.getMod();
             this._axisYGenerator.setNavigationScope(navigationScope);
             this._axisXGenerator.setNavigationScope(navigationScope);
-            this._updateAxisYData(prevAxisYHash);
+            this._updateAxisYData(prevAxisYItemsMap);
             this._updateAxisXData(prevAxisXMod);
         }
         this._drawAnimation(this._getGraphScope());
     }
 
-    _updateAxisYData(prevAxisYHash: string) {
-        const currentAxisYHash = this._axisYGenerator.getHash();
-        if (!currentAxisYHash || this._axisYDataMap[currentAxisYHash]) {
+    _updateAxisYData(prevAxisYItemsMap: AxisYItemsMapType | null) {
+        const axisYItemsMap = this._axisYGenerator.getAxisYItemsMap();
+        if (!axisYItemsMap) {
             return;
         }
+        this._axisYItemsMap = axisYItemsMap;
 
-        Object.keys(this._axisYDataMap).forEach((hash) => {
-            if (hash !== prevAxisYHash && hash !== currentAxisYHash) {
-                delete this._axisYDataMap[hash];
+        const prevScope = this._axisYDataMap[Object.keys(this._axisYDataMap)[0]].scope;
+
+        Object.keys(axisYItemsMap).forEach((key: string) => {
+            if (!this._axisYDataMap[key]) {
+                this._axisYDataMap[key] = {
+                    item: axisYItemsMap[key],
+                    scope: { ...prevScope },
+                    opacity: 0,
+                };
             }
         });
 
-        this._axisYHash = currentAxisYHash;
-        this._axisYDataMap[currentAxisYHash] = {
-            hash: currentAxisYHash,
-            items: this._axisYGenerator.getAxisYItems(),
-            scope: { ...this._axisYDataMap[prevAxisYHash].scope },
-            opacity: 0,
-        };
-        this._axisYDataMap[prevAxisYHash].opacity = 1;
+        if (prevAxisYItemsMap) {
+            Object.keys(this._axisYDataMap).forEach((key) => {
+                if (!prevAxisYItemsMap[key] && !axisYItemsMap[key]) {
+                    delete this._axisYDataMap[key];
+                }
+            });
+        }
+
     }
 
     _updateAxisXData(prevMod: number) {
@@ -166,8 +173,8 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
 
     _getPrevAxisYDataMap(): AxisYDataMapType {
         const prevAxisYDataMap: AxisYDataMapType = {};
-        Object.entries(this._axisYDataMap).forEach(([hash, axisYData]) => {
-            prevAxisYDataMap[hash] = {
+        Object.entries(this._axisYDataMap).forEach(([key, axisYData]) => {
+            prevAxisYDataMap[key] = {
                 ...axisYData,
                 scope: { ...axisYData.scope },
             };
@@ -205,19 +212,15 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             return;
         }
 
-        Object.entries(this._axisYDataMap).forEach(([hash, axisYData]) => {
-            if (!prevAxisYDataMap[hash]) {
-                delete this._axisYDataMap[hash];
-                return;
-            }
-            const prevScope = prevAxisYDataMap[hash].scope;
+        Object.entries(this._axisYDataMap).forEach(([key, axisYData]) => {
+            const prevScope = prevAxisYDataMap[key].scope;
             axisYData.scope = {
                 maxValue: (newScope.maxValue - prevScope.maxValue) * progress.tween + prevScope.maxValue,
                 minValue: (newScope.minValue - prevScope.minValue) * progress.tween + prevScope.minValue,
                 scaleY: (newScope.scaleY - prevScope.scaleY) * progress.tween + prevScope.scaleY,
             };
-            const prevOpacity: number = prevAxisYDataMap[hash].opacity;
-            const opacity = this._axisYHash === hash ? 1 : 0;
+            const prevOpacity: number = prevAxisYDataMap[key].opacity;
+            const opacity = this._axisYItemsMap[key] ? 1 : 0;
             axisYData.opacity = (opacity - prevOpacity) * progress.tween + prevOpacity;
         });
     }
@@ -236,9 +239,9 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             return;
         }
 
-        Object.keys(this._axisYDataMap).forEach((hash: string) => {
-            if (this._axisYHash !== hash && !this._axisYDataMap[hash].opacity) {
-                delete this._axisYDataMap[hash];
+        Object.keys(this._axisYDataMap).forEach((key: string) => {
+            if (!this._axisYItemsMap[key] && !this._axisYDataMap[key].opacity) {
+                delete this._axisYDataMap[key];
             }
         });
     }
@@ -345,6 +348,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         if (!this._axisYDataMap) {
             return;
         }
+
         const context = this._context;
         context.save();
         context.translate(0, this._canvasHeight - this._verticalPadding);
@@ -355,12 +359,11 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             context.globalAlpha = axisYData.opacity;
             context.beginPath();
 
-            axisYData.items.forEach((item: AxisYItemType) => {
-                const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
-                context.moveTo(0, y);
-                context.lineTo(this._canvasWidth, y);
-            });
+            const item: AxisYItemType = axisYData.item;
+            const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
 
+            context.moveTo(0, y);
+            context.lineTo(this._canvasWidth, y);
             context.stroke();
         });
         context.restore();
@@ -376,12 +379,11 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
 
         Object.values(this._axisYDataMap).forEach((axisYData: AxisYDataType) => {
             context.globalAlpha = axisYData.opacity;
-            axisYData.items.forEach((item: AxisYItemType) => {
-                const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
-
-                context.fillText(item.title, 0, y - this._getCanvasValue(GRAPH_AXIS_X_TOP));
-            });
+            const item: AxisYItemType = axisYData.item;
+            const y = -(item.value - axisYData.scope.minValue) * axisYData.scope.scaleY;
+            context.fillText(item.title, 0, y - this._getCanvasValue(GRAPH_AXIS_X_TOP));
         });
         context.restore();
     }
+
 }

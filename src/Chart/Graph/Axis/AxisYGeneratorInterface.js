@@ -7,12 +7,14 @@ export type AxisYItemType = {
     title: string,
 };
 
+export type AxisYItemsMapType = {
+    [string]: AxisYItemType;
+};
+
 export interface AxisYGeneratorInterface {
 
     setNavigationScope(navigationScope: NavigationScopeType): void;
 
-    getAxisYItems(): null | AxisYItemType[];
-
-    getHash(): null | string;
+    getAxisYItemsMap(): null | AxisYItemsMapType;
 
 }

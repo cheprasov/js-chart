@@ -1,0 +1,32 @@
+
+body {
+    font: 1rem/1.2rem "Open Sans","Lucida Grande","Lucida Sans Unicode",Arial,Helvetica,Verdana,sans-serif;
+    padding: 20px;
+}
+
+body.night {
+    background-color: #242f3e;
+}
+
+.Control {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.ThemeSwitcher {
+    color: #0085ff;
+    border-bottom: 1px solid #0085ff;
+    cursor: pointer;
+}
+
+.ThemeSwitcher:before {
+    content: 'Swith to Night Mode';
+}
+
+.night .ThemeSwitcher:before {
+    content: 'Swith to Day Mode';
+}
+
+.Chart {
+    margin: 20px 0;
+}

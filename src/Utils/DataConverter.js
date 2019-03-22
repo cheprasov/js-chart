@@ -38,7 +38,7 @@ export default class DataConverter {
             const type = rawChartData.types[key];
 
             if (type === CHART_DATA_TYPE_LINE) {
-                const lineData: ChartLineType = this.createLine(rawChartData, key, data);
+                const lineData: ChartLineType = this._createLine(rawChartData, key, data);
                 chartObjects.lines.push(lineData);
                 chartObjects.minValue = Math.min(chartObjects.minValue, lineData.minValue);
                 chartObjects.maxValue = Math.max(chartObjects.maxValue, lineData.maxValue);
@@ -52,23 +52,22 @@ export default class DataConverter {
             }
         });
 
-
         return Object.freeze(chartObjects);
     }
 
-    static getRandomColor(): string {
+    static _getRandomColor(): string {
         const rgb = [0, 0, 0].map(() => Math.round(Math.random() * 15).toString(16).repeat(2));
         return `#${rgb.join('')}`;
     }
 
-    static createLine(rawChartData: RawChartDataType, key: string, values: number): ChartLineType {
+    static _createLine(rawChartData: RawChartDataType, key: string, values: number): ChartLineType {
         const line: ChartLineType = {
             key,
             values,
             minValue: Math.min(...values),
             maxValue: Math.max(...values),
             name: rawChartData.names[key] || 'unnamed',
-            color: rawChartData.colors[key] || this.getRandomColor(),
+            color: rawChartData.colors[key] || this._getRandomColor(),
         };
         return Object.freeze(line);
     }
