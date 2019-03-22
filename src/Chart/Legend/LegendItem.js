@@ -1,12 +1,13 @@
-//@flow
+// @flow
+
+import BaseComponent from '../Base/BaseComponent';
+import DocumentHelper from '../../Utils/DocumentHelper';
+import ScreenUtils from '../../Utils/ScreenUtils';
 
 import type { ChartLineType } from '../Chart';
 import type { LegendItemInterface } from './LegendItemInterface';
 
 import './LegendItem.scss';
-import BaseComponent from '../Base/BaseComponent';
-import DocumentHelper from '../../Utils/DocumentHelper';
-import ScreenUtils from '../../Utils/ScreenUtils';
 
 export default class LegendItem extends BaseComponent implements LegendItemInterface {
 

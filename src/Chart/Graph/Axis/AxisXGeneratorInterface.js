@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 

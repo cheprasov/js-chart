@@ -3,6 +3,8 @@
 import Legend from './Legend/Legend';
 import Navigation from './Navigation/Navigation';
 import DocumentHelper from '../Utils/DocumentHelper';
+import LineViewer from './Viewer/LineViewer';
+// import FunctionUtils from '../Utils/FunctionUtils';
 
 import type { ChartInterface } from './ChartInterface';
 import type { NavigationInterface, NavigationScopeType } from './Navigation/NavigationInterface';
@@ -10,8 +12,6 @@ import type { LegendInterface, VisibilityMapType } from './Legend/LegendInterfac
 import type { ViewerInterface } from './Viewer/ViewerInterface';
 
 import './Chart.scss';
-import LineViewer from './Viewer/LineViewer';
-// import FunctionUtils from '../Utils/FunctionUtils';
 
 export type ChartLineType = {
     key: string,
@@ -41,7 +41,7 @@ type OptionsType = {
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
     data: null,
     trimAxisY: false,
-    renderQualityRatio: 0.75,
+    renderQualityRatio: 0.85,
     title: '',
 };
 

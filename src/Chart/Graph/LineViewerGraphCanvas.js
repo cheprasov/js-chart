@@ -153,14 +153,13 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             }
         });
 
-        if (prevAxisYItemsMap) {
-            Object.keys(this._axisYDataMap).forEach((key) => {
-                if (!prevAxisYItemsMap[key] && !axisYItemsMap[key]) {
-                    delete this._axisYDataMap[key];
-                }
-            });
-        }
-
+        // if (prevAxisYItemsMap) {
+        //     Object.keys(this._axisYDataMap).forEach((key) => {
+        //         if (!prevAxisYItemsMap[key] && !axisYItemsMap[key]) {
+        //             //delete this._axisYDataMap[key];
+        //         }
+        //     });
+        // }
     }
 
     _updateAxisXData(prevMod: number) {

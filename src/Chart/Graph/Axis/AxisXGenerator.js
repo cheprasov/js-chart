@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import type { AxisXGeneratorInterface, AxisXItemType } from './AxisXGeneratorInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';

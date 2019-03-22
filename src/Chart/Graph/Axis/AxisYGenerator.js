@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import type { AxisYGeneratorInterface, AxisYItemsMapType } from './AxisYGeneratorInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
@@ -20,6 +20,7 @@ export default class AxisYGenerator implements AxisYGeneratorInterface {
         this._cacheAxisYItemsMap = null;
     }
 
+    // todo: write better algorithm
     getAxisYItemsMap(): null | AxisYItemsMapType {
         if (!this._navigationScope || this._navigationScope.maxValueSlice === null
             || this._navigationScope.minValueSlice === null) {
@@ -30,7 +31,7 @@ export default class AxisYGenerator implements AxisYGeneratorInterface {
             return this._cacheAxisYItemsMap;
         }
 
-        const topValue = MathUtils.largeCeil(this._navigationScope.maxValueSlice);
+        const topValue = MathUtils.largeFloor(this._navigationScope.maxValueSlice);
         const lowValue = MathUtils.largeFloor(this._navigationScope.minValueSlice);
         const stepValue = Math.round((topValue - lowValue) / (this._count - 1));
 

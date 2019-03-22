@@ -8,25 +8,29 @@ body.night {
     background-color: #242f3e;
 }
 
-.Control {
-    text-align: center;
-    margin-bottom: 20px;
+.Chart {
+    margin: 20px 0;
 }
 
 .ThemeSwitcher {
-    color: #0085ff;
-    border-bottom: 1px solid #0085ff;
-    cursor: pointer;
+    position: relative;
+    display: block;
+    height: 60px;
+    width: 240px;
+    left: 50%;
+    margin: 0 0 20px -120px;
+    line-height: 60px;
+    font-size: 1.3rem;
+    text-align: center;
+    color: #108be3;
+    text-decoration: none;
 }
 
 .ThemeSwitcher:before {
-    content: 'Swith to Night Mode';
+    content: 'Switch to Night Mode';
 }
 
 .night .ThemeSwitcher:before {
-    content: 'Swith to Day Mode';
-}
-
-.Chart {
-    margin: 20px 0;
+    content: 'Switch to Day Mode';
+    color: #36a8f1;
 }

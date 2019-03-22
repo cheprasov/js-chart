@@ -99,7 +99,6 @@ export default class LineGraphCanvas implements GraphInterface {
         this._animation = new WebAnimation({
             duration: params.animationDuration,
             easing: easingOutSine,
-            onStop: this._onAnimationEnd,
             onFinish: this._onAnimationEnd,
         });
     }

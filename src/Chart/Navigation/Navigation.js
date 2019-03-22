@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import BaseComponent from '../Base/BaseComponent';
 import DocumentHelper from '../../Utils/DocumentHelper';

@@ -1,4 +1,4 @@
-//@flow
+// @flow
 
 import DocumentHelper from '../../Utils/DocumentHelper';
 import AxisXGenerator from '../Graph/Axis/AxisXGenerator';

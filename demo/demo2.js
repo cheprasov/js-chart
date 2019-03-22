@@ -8,46 +8,56 @@ import type { ChartInterface } from '../src/Chart/ChartInterface';
 // Chart code
 
 const divId = 'id-telegram-chart-will-be-here';
-const divElement: HTMLDivElement = document.getElementById(divId);
-
+const divContainer: HTMLDivElement = document.getElementById(divId);
 const charts: ChartInterface[] = [];
+let switcherElement: HTMLDivElement;
 
 jsonData.forEach((rawChartData: RawChartDataType, index: number) => {
     const preparedData = DataConverter.prepareChartData(rawChartData);
     if (!preparedData) {
-        divElement.appendChild(document.createTextNode(`Wrong chart data with index ${index}`));
+        divContainer.appendChild(document.createTextNode(`Wrong chart data with index ${index}`));
         return;
     }
 
-    for (let renderQuality = 0; renderQuality <= 100; renderQuality += 25) {
-        const chart = new Chart(
-            preparedData,
-            {
-                title: `Chart ${index + 1}, Quality ${renderQuality}%`,
-                renderQualityRatio: renderQuality / 100,
-            },
-        );
-        charts.push(chart);
-        chart.render(divElement);
-    }
+    const qualityRatio: number = 1 - (jsonData.length ? (index / (jsonData.length - 1)) : 0);
+    const chart = new Chart(
+        preparedData,
+        {
+            title: `Chart ${index + 1}, Quality ${Math.round(qualityRatio * 100)}% `,
+            renderQualityRatio: qualityRatio,
+        },
+    );
+    charts.push(chart);
+    chart.render(divContainer);
 
+    if (!index) {
+        switcherElement = document.createElement('a');
+        switcherElement.classList.add('ThemeSwitcher');
+        switcherElement.setAttribute('href', '#');
+        divContainer.appendChild(switcherElement);
+    }
 });
 
+// Code for switching theme mode for all charts together
 
-// Other page code
+if (switcherElement) {
+    const isTouchScreen = ('ontouchstart' in document.documentElement);
 
-const isTouchScreen = ('ontouchstart' in document.documentElement);
-let isNightMode: boolean = false;
+    let isNightMode: boolean = false;
+    switcherElement.addEventListener(isTouchScreen ? 'touchstart' : 'click', (event: TouchEvent | MouseEvent) => {
+        isNightMode = !isNightMode;
+        if (isNightMode) {
+            document.body.classList.add('night');
+        } else {
+            document.body.classList.remove('night');
+        }
+        charts.forEach((chart: ChartInterface) => {
+            chart.switchNightTheme(isNightMode);
+        });
 
-const switcherElement: HTMLSpanElement = document.getElementById('id-theme-switcher');
-switcherElement.addEventListener(isTouchScreen ? 'touchstart' : 'click', () => {
-    isNightMode = !isNightMode;
-    if (isNightMode) {
-        document.body.classList.add('night');
-    } else {
-        document.body.classList.remove('night');
-    }
-    charts.forEach((chart: ChartInterface) => {
-        chart.switchNightTheme(isNightMode);
+        if (event.cancelable) {
+            event.preventDefault();
+        }
+        event.stopPropagation();
     });
-});
+}

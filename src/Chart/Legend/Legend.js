@@ -1,13 +1,13 @@
-//@flow
+// @flow
 
 import LegendItem from './LegendItem';
+import DocumentHelper from '../../Utils/DocumentHelper';
 
 import type { LegendInterface, VisibilityMapType } from './LegendInterface';
 import type { ChartLineType, ChartDataType } from '../Chart';
 import type { LegendItemInterface } from './LegendItemInterface';
 
 import './Legend.scss';
-import DocumentHelper from '../../Utils/DocumentHelper';
 
 export default class Legend implements LegendInterface {
 
