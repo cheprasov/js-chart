@@ -45,13 +45,14 @@ export default class DataConverter {
             }
             if (type === CHART_DATA_TYPE_X) {
                 if (!chartObjects.x) {
-                    chartObjects.x = data;
+                    chartObjects.x = Object.freeze([...data]);
                     chartObjects.length = data.length;
                     chartObjects.maxIndex = data.length - 1;
                 }
             }
         });
 
+        chartObjects.lines = Object.freeze(chartObjects.lines);
         return Object.freeze(chartObjects);
     }
 
@@ -63,7 +64,7 @@ export default class DataConverter {
     static _createLine(rawChartData: RawChartDataType, key: string, values: number): ChartLineType {
         const line: ChartLineType = {
             key,
-            values,
+            values: Object.freeze([...values]),
             minValue: Math.min(...values),
             maxValue: Math.max(...values),
             name: rawChartData.names[key] || 'unnamed',

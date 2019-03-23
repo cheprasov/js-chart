@@ -106,7 +106,7 @@ chart2.render(document.getElementById('telegram-chart-will-be-here'));
 - Add support of **WEBGL** context of canvas for drawing charts. Unfortunately, I have not enough experience with pure **WEBGL** for finish it in time.
 - Write proper unit tests for each class, and I will do it soon.
 - Add more behaviours for navigation by time / chart.
-- Add support of winder range of data, also negative values.
+- Add support of winder range of data, negative values, and part time ranges.
 - Add support multi languages, and default language should based on browser language.
 - Add more params for customization a chart, and more flexible support of themes.
 - Add some other chart like bars, pie and so on.
