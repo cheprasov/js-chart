@@ -2,19 +2,19 @@
 
 import BaseComponent from '../Base/BaseComponent';
 import DocumentHelper from '../../Utils/DocumentHelper';
+import ArrayUtils from '../../Utils/ArrayUtils';
+import EventHelper from '../../Utils/EventHelper';
+import ScreenUtils from '../../Utils/ScreenUtils';
+import NavigationLineGraphCanvas from '../Graph/NavigationLineGraphCanvas';
+import MathUtils from '../../Utils/MathUtils';
 
 import type { NavigationInterface, NavigationScopeType } from './NavigationInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { GraphInterface } from '../Graph/GraphInterface';
+import type { MinMaxValueType } from '../../Utils/ArrayUtils';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 import './Navigation.scss';
-import type { MinMaxValueType } from '../../Utils/ArrayUtils';
-import ArrayUtils from '../../Utils/ArrayUtils';
-import ScreenUtils from '../../Utils/ScreenUtils';
-import NavigationLineGraphCanvas from '../Graph/NavigationLineGraphCanvas';
-import MathUtils from '../../Utils/MathUtils';
-import EventHelper from '../../Utils/EventHelper';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 

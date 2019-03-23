@@ -32,14 +32,12 @@ export type ChartDataType = {
 };
 
 type OptionsType = {
-    data: ChartDataType,
     trimAxisY?: boolean,
     renderQualityRatio?: number,
     title?: string;
 };
 
 const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
-    data: null,
     trimAxisY: false,
     renderQualityRatio: 0.85,
     title: '',

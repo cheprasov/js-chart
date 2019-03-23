@@ -1,14 +1,15 @@
 // @flow
 
-import type { InfoBoxInterface } from './InfoBoxInterface';
+import BaseComponent from '../../Base/BaseComponent';
 import DocumentHelper from '../../../Utils/DocumentHelper';
+import DateUtils from '../../../Utils/DateUtils';
+
+import type { InfoBoxInterface } from './InfoBoxInterface';
 import type { ChartDataType, ChartLineType } from '../../Chart';
 import type { VisibilityMapType } from '../../Legend/LegendInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 
 import './InfoBox.scss';
-import DateUtils from '../../../Utils/DateUtils';
-import BaseComponent from '../../Base/BaseComponent';
 
 type OptionsType = {
     data: ChartDataType,
