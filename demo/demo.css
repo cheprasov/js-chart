@@ -12,6 +12,14 @@ body.night {
     margin: 20px 0;
 }
 
+@media screen and (min-width: 600px){
+    .Chart {
+        width: 600px !important;
+        left: 50%;
+        margin: 20px 0 20px -300px;
+    }
+}
+
 .ThemeSwitcher {
     position: relative;
     display: block;
