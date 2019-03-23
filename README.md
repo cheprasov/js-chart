@@ -17,7 +17,7 @@ Code of demo: [./demo/demo1.js](demo/demo1.js)
 ### Demo 2. Using different quality of render.
 Please note, the render quality will have effect for screen with `devicePixelRatio > 1`, see here http://telegram-chart.cheprasov.com/demo2.html
 
-Code of demo: [./demo/demo2.js](demo/demo3.js)
+Code of demo: [./demo/demo2.js](demo/demo2.js)
 
 ### Demo 3. Trim data by min & max values:
 The chart trims empty spaces and shows lines in full height mode: http://telegram-chart.cheprasov.com/demo3.html
