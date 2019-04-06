@@ -3,7 +3,6 @@
 import type { ProgressType } from '@cheprasov/web-animation/src/WebAnimation';
 
 import LineGraphCanvas from './LineGraphCanvas';
-
 import type { ChartLineType } from '../Chart';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { AxisYGeneratorInterface, AxisYItemsMapType, AxisYItemType } from './Axis/AxisYGeneratorInterface';
@@ -187,7 +186,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
     }
 
     _drawAnimation(newScope: GraphScopeType) {
-        this._animation.stop();
+        this._createAnimation();
 
         const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
         const prevAxisYDataMap: AxisYDataMapType = this._getPrevAxisYDataMap();

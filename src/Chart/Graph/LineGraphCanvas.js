@@ -10,6 +10,7 @@ import type { GraphInterface } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
+import FunctionUtils from '../../Utils/FunctionUtils';
 
 export type GraphScopeType = {
     maxValue: ?number,
@@ -66,6 +67,7 @@ export default class LineGraphCanvas implements GraphInterface {
     _lineWidth: number;
     _verticalPadding: number;
     _renderQualityRatio: number;
+    _animationDuration: number;
 
     _canvas: HTMLCanvasElement;
     _context: CanvasRenderingContext2D;
@@ -89,18 +91,14 @@ export default class LineGraphCanvas implements GraphInterface {
         this._verticalPaddingRatio = params.verticalPaddingRatio;
         this._renderQualityRatio = Math.min(1, Math.max(0.1, params.renderQualityRatio));
         this._lineWidth = params.lineWidth;
+        this._animationDuration = params.animationDuration;
 
         this._canvasWidth = Math.round(this._getCanvasValue(this._width));
         this._canvasHeight = Math.round(this._getCanvasValue(this._height));
         this._verticalPadding = this._canvasHeight * this._verticalPaddingRatio / 2;
 
         this._onAnimationEnd = this._onAnimationEnd.bind(this);
-
-        this._animation = new WebAnimation({
-            duration: params.animationDuration,
-            easing: easingOutSine,
-            onFinish: this._onAnimationEnd,
-        });
+        //this._drawAnimation = FunctionUtils.debounce(this._drawAnimation.bind(this), 100);
     }
 
     _init() {
@@ -117,6 +115,17 @@ export default class LineGraphCanvas implements GraphInterface {
         this._context.lineJoin = 'bevel';
         this._context.lineCap = 'butt';
         this._context.font = `${this._getCanvasValue(16)}px Arial`;
+    }
+
+    _createAnimation() {
+        if (this._animation) {
+            this._animation.stop();
+        }
+        this._animation = new WebAnimation({
+            duration: this._animationDuration,
+            easing: easingOutSine,
+            onFinish: this._onAnimationEnd,
+        });
     }
 
     _getCanvasValue(value: number) {
@@ -157,7 +166,7 @@ export default class LineGraphCanvas implements GraphInterface {
     }
 
     _drawAnimation(newScope: GraphScopeType) {
-        this._animation.stop();
+        this._createAnimation();
 
         const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
         const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
