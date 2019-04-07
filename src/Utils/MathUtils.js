@@ -78,4 +78,8 @@ export default class MathUtils {
         return val;
     }
 
+    static formatNumber(value: number): string {
+        return value.toString().replace(/(\d)(?=(\d{3})+$)/g, '$1,');
+    }
+
 }

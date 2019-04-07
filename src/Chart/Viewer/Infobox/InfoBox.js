@@ -10,6 +10,7 @@ import type { ChartDataType, ChartLineType } from '../../Chart';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 
 import './InfoBox.scss';
+import MathUtils from '../../../Utils/MathUtils';
 
 type OptionsType = {
     data: ChartDataType,
@@ -109,8 +110,8 @@ export default class InfoBox extends BaseComponent implements InfoBoxInterface {
 
             this._data.lines.forEach((line: ChartLineType) => {
                 const divElements: DivElementsType = this._divElementsMap[line.key];
-                divElements.valueElement.innerText = line.values[index];
-                divElements.titleElement.innerHTML = line.name;
+                divElements.valueElement.innerText = MathUtils.formatNumber(line.values[index]);
+                divElements.titleElement.innerText = line.name;
             });
 
             this._divInfo.classList.add('visible');
