@@ -13,12 +13,9 @@ export default class NavigationLineGraphCanvas extends LineGraphCanvas {
         super(options);
     }
 
-    _drawLinesAnimation(
-        // eslint-disable-next-line no-unused-vars
-        progress: ProgressType, newScope: GraphScopeType, prevLineDataMap: LineDataMapType, isNotEmptyGraph: boolean,
-    ) {
+    _drawLinesAnimation(progress: ProgressType, newScope: GraphScopeType, prevLineDataMap: LineDataMapType) {
         Object.entries(this._lineDataMap).forEach(([key, lineData]) => {
-            const isVisible = this._visibilityMap[key];
+            const isVisible = this._visibilityMap.isVisible(key);
             const prevOpacity: number = prevLineDataMap[key].opacity;
             const prevScope = prevLineDataMap[key].scope;
             if (isVisible) {

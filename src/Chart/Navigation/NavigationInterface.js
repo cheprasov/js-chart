@@ -1,7 +1,8 @@
 // @flow
 
+import VisibilityMap from '../Legend/VisibilityMap/VisibilityMap';
+
 import type { RenderInterface } from '../Base/RenderInterface';
-import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 export type NavigationScopeType = {
     minXRatio: number,
@@ -14,7 +15,7 @@ export type NavigationScopeType = {
 
 export interface NavigationInterface extends RenderInterface {
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void;
+    setVisibilityMap(visibilityMap: VisibilityMap): void;
 
     setCallbackOnChangeNavigationScope(callback: Function): void;
 

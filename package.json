@@ -6,7 +6,7 @@
   "main": "dist/chart.js",
   "license": "MIT",
   "dependencies": {
-    "@cheprasov/web-animation": "^0.1.5"
+    "@cheprasov/web-animation": "^0.1.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.5",

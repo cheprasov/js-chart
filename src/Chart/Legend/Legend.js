@@ -2,11 +2,12 @@
 
 import LegendItem from './LegendItem';
 import DocumentHelper from '../../Utils/DocumentHelper';
+import VisibilityMap from './VisibilityMap/VisibilityMap';
 
-import type { LegendInterface, VisibilityMapType } from './LegendInterface';
+import type { LegendInterface, VisibilityType } from './LegendInterface';
 import type { ChartLineType, ChartDataType } from '../Chart';
-import type { LegendItemInterface } from './LegendItemInterface';
 
+import type { LegendItemInterface } from './LegendItemInterface';
 import './Legend.scss';
 
 export default class Legend implements LegendInterface {
@@ -14,7 +15,7 @@ export default class Legend implements LegendInterface {
     _data: ChartDataType;
     _legendItems: LegendItemInterface[] = [];
     _callbackOnChangeVisibility: Function = () => {};
-    _visibilityMap: VisibilityMapType = {};
+    _visibility: VisibilityType = {};
 
     constructor(data: ChartDataType) {
         this._data = data;
@@ -25,7 +26,7 @@ export default class Legend implements LegendInterface {
 
     _initData() {
         this._data.lines.forEach((line: ChartLineType) => {
-            this._visibilityMap[line.key] = true;
+            this._visibility[line.key] = true;
         });
     }
 
@@ -34,12 +35,12 @@ export default class Legend implements LegendInterface {
     }
 
     _onChangeVisibility(legendItem: LegendItemInterface): void {
-        this._visibilityMap[legendItem.getKey()] = legendItem.isVisible();
+        this._visibility[legendItem.getKey()] = legendItem.isVisible();
         this._callbackOnChangeVisibility(this.getVisibilityMap());
     }
 
-    getVisibilityMap(): VisibilityMapType {
-        return Object.freeze({ ...this._visibilityMap });
+    getVisibilityMap(): VisibilityMap {
+        return new VisibilityMap(this._visibility);
     }
 
     render(container: HTMLElement) {

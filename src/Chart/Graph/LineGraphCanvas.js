@@ -5,12 +5,13 @@ import type { ProgressType } from '@cheprasov/web-animation/src/WebAnimation';
 
 import ScreenUtils from '../../Utils/ScreenUtils';
 import { easingOutSine } from '../../Utils/Easing';
+import VisibilityMap from '../Legend/VisibilityMap/VisibilityMap';
 
 import type { GraphInterface } from './GraphInterface';
 import type { ChartDataType, ChartLineType } from '../Chart';
-import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import FunctionUtils from '../../Utils/FunctionUtils';
+
 
 export type GraphScopeType = {
     maxValue: ?number,
@@ -30,7 +31,7 @@ export type LineDataMapType = {
 
 export type OptionsType = {
     data: ChartDataType,
-    visibilityMap: VisibilityMapType,
+    visibilityMap: VisibilityMap,
     navigationScope: NavigationScopeType,
     width: number,
     height: number,
@@ -57,7 +58,7 @@ const DEFAULT_CONSTRUCTOR_PARAMS = {
 export default class LineGraphCanvas implements GraphInterface {
 
     _data: ChartDataType;
-    _visibilityMap: VisibilityMapType;
+    _visibilityMap: VisibilityMap;
     _navigationScope: NavigationScopeType;
 
     _width: number;
@@ -77,6 +78,11 @@ export default class LineGraphCanvas implements GraphInterface {
     // separate scope for each line is because different animation on task mock
     _lineDataMap: LineDataMapType;
     _animation: ?WebAnimation;
+
+    _currentScope: GraphScopeType;
+    _oldScope: GraphScopeType;
+
+    _prevLineDataMap: LineDataMapType;
 
     constructor(options: OptionsType = {}) {
         const params = { ...DEFAULT_CONSTRUCTOR_PARAMS, ...options };
@@ -98,12 +104,16 @@ export default class LineGraphCanvas implements GraphInterface {
         this._verticalPadding = this._canvasHeight * this._verticalPaddingRatio / 2;
 
         this._onAnimationEnd = this._onAnimationEnd.bind(this);
-        //this._drawAnimation = FunctionUtils.debounce(this._drawAnimation.bind(this), 100);
+        this._onAnimationStep = this._onAnimationStep.bind(this);
+        //this._drawAnimation = FunctionUtils.debounce(this._drawAnimation.bind(this), 2000);
     }
 
     _init() {
+        this._currentScope = this._getGraphScope();
+        this._newScope = { ...this._currentScope };
         this._initCanvas();
         this._initLineDataMap();
+        this._createAnimation();
     }
 
     _initCanvas() {
@@ -118,14 +128,12 @@ export default class LineGraphCanvas implements GraphInterface {
     }
 
     _createAnimation() {
-        if (this._animation) {
-            this._animation.stop();
-        }
         this._animation = new WebAnimation({
             duration: this._animationDuration,
-            easing: easingOutSine,
+            //easing: easingOutSine,
             onFinish: this._onAnimationEnd,
         });
+        this._animation.setOnStep(this._onAnimationStep);
     }
 
     _getCanvasValue(value: number) {
@@ -146,12 +154,13 @@ export default class LineGraphCanvas implements GraphInterface {
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
-        this._drawAnimation(this._getGraphScope());
+        this._newScope = this._getGraphScope();
+        this._drawAnimation();
     }
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void {
+    setVisibilityMap(visibilityMap: VisibilityMap): void {
         this._visibilityMap = visibilityMap;
-        this._drawAnimation(this._getGraphScope());
+        this._drawAnimation();
     }
 
     _getPrevLineDataMap(): LineDataMapType {
@@ -165,29 +174,23 @@ export default class LineGraphCanvas implements GraphInterface {
         return prevLineDataMap;
     }
 
-    _drawAnimation(newScope: GraphScopeType) {
-        this._createAnimation();
-
-        const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
-        const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
-
-        this._animation.setOnStep((progress: ProgressType) => {
-            this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
-            this._draw();
-        });
-
+    _drawAnimation() {
+        this._prevLineDataMap = this._getPrevLineDataMap();
         this._animation.run();
     }
 
-    _drawLinesAnimation(
-        progress: ProgressType, newScope: GraphScopeType, prevLineDataMap: LineDataMapType, isNotEmptyGraph: boolean,
-    ) {
+    _onAnimationStep(progress: ProgressType) {
+        this._drawLinesAnimation(progress, this._newScope, this._prevLineDataMap);
+        this._draw();
+    }
+
+    _drawLinesAnimation(progress: ProgressType, newScope: GraphScopeType, prevLineDataMap: LineDataMapType) {
         Object.entries(this._lineDataMap).forEach(([key, lineData]) => {
-            const isVisible = this._visibilityMap[key];
+            const isVisible = this._visibilityMap.isVisible(key);
             const prevOpacity: number = prevLineDataMap[key].opacity;
             const prevScope = prevLineDataMap[key].scope;
 
-            if (isNotEmptyGraph) {
+            if (!this._visibilityMap.isEmpty()) {
                 lineData.scope = {
                     maxValue: (newScope.maxValue - prevScope.maxValue) * progress.tween + prevScope.maxValue,
                     minValue: (newScope.minValue - prevScope.minValue) * progress.tween + prevScope.minValue,

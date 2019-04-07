@@ -12,9 +12,9 @@ import type { NavigationInterface, NavigationScopeType } from './NavigationInter
 import type { ChartDataType, ChartLineType } from '../Chart';
 import type { GraphInterface } from '../Graph/GraphInterface';
 import type { MinMaxValueType } from '../../Utils/ArrayUtils';
-import type { VisibilityMapType } from '../Legend/LegendInterface';
 
 import './Navigation.scss';
+import VisibilityMap from '../Legend/VisibilityMap/VisibilityMap';
 
 const SCROLL_CENTER_MIN_RATIO = 0.15; // 15%
 
@@ -40,7 +40,7 @@ type MoveScrollDataType = {
 
 type OptionsType = {
     data: ChartDataType,
-    visibilityMap: VisibilityMapType,
+    visibilityMap: VisibilityMap,
     trimAxisY?: boolean,
     renderQualityRatio?: number,
 };
@@ -63,7 +63,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
     _divShadowRight: ?HTMLDivElement;
     _divScroll: ?HTMLDivElement;
 
-    _visibilityMap: VisibilityMapType;
+    _visibilityMap: VisibilityMap;
 
     _moveScrollData: ?MoveScrollDataType;
     _scrollData: ScrollDataType = { left: 0, right: 0, center: 0, width: 0 };
@@ -94,7 +94,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
         };
     }
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void {
+    setVisibilityMap(visibilityMap: VisibilityMap): void {
         this._visibilityMap = visibilityMap;
 
         this._updateVerticalScope();
@@ -128,7 +128,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     _updateVerticalScope(): void {
         const verticalScope = this._data.lines.reduce((result: {}, chartLine: ChartLineType) => {
-            if (!this._visibilityMap[chartLine.key]) {
+            if (!this._visibilityMap.isVisible(chartLine.key)) {
                 // skip invisible lines
                 return result;
             }
@@ -169,7 +169,7 @@ export default class Navigation extends BaseComponent implements NavigationInter
 
     _updateVerticalSliceScope() {
         const values: number[][] = this._data.lines
-            .filter((line: ChartLineType) => this._visibilityMap[line.key])
+            .filter((line: ChartLineType) => this._visibilityMap.isVisible(line.key))
             .map((line: ChartLineType) => line.values);
         const minMaxValue: MinMaxValueType = ArrayUtils.getMinMaxValueBySliceArrays(
             values,

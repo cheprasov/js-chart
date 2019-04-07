@@ -3,17 +3,16 @@
 import DocumentHelper from '../../Utils/DocumentHelper';
 import AxisXGenerator from '../Graph/Axis/AxisXGenerator';
 import AxisYGenerator from '../Graph/Axis/AxisYGenerator';
-
 import LineViewerGraphCanvas, { GRAPH_AXIS_X_TEXT_WIDTH } from '../Graph/LineViewerGraphCanvas';
 import ScreenUtils from '../../Utils/ScreenUtils';
 import BaseComponent from '../Base/BaseComponent';
 import EventHelper from '../../Utils/EventHelper';
 import InfoBox from './Infobox/InfoBox';
 import Constants from '../../constants';
+import VisibilityMap from '../Legend/VisibilityMap/VisibilityMap';
 
 import type { ViewerInterface } from './ViewerInterface';
 import type { ChartDataType } from '../Chart';
-import type { VisibilityMapType } from '../Legend/LegendInterface';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { ViewerGraphInterface } from '../Graph/ViewerGraphInterface';
 import type { InfoBoxInterface } from './Infobox/InfoBoxInterface';
@@ -25,7 +24,7 @@ const GRAPH_AXIS_Y_COUNT = 6;
 
 type OptionsType = {
     data: ChartDataType,
-    visibilityMap: VisibilityMapType,
+    visibilityMap: VisibilityMap,
     navigationScope: NavigationScopeType,
     renderQualityRatio?: number,
 };
@@ -40,7 +39,7 @@ const DEFAULT_CONSTRUCTOR_PARAMS: OptionsType = {
 export default class LineViewer extends BaseComponent implements ViewerInterface {
 
     _data: ChartDataType;
-    _visibilityMap: VisibilityMapType;
+    _visibilityMap: VisibilityMap;
     _navigationScope: NavigationScopeType;
     _renderQualityRatio: number;
 
@@ -69,7 +68,7 @@ export default class LineViewer extends BaseComponent implements ViewerInterface
         }
     }
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void {
+    setVisibilityMap(visibilityMap: VisibilityMap): void {
         this._visibilityMap = visibilityMap;
         this._infoBox.setVisibilityMap(visibilityMap);
         if (this._graph) {

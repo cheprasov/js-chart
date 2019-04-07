@@ -1,6 +1,7 @@
 // @flow
 
-import type { VisibilityMapType } from '../Legend/LegendInterface';
+import VisibilityMap from '../Legend/VisibilityMap/VisibilityMap';
+
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 
 export interface GraphInterface {
@@ -11,5 +12,5 @@ export interface GraphInterface {
 
     setNavigationScope(navigationScope: NavigationScopeType): void;
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void;
+    setVisibilityMap(visibilityMap: VisibilityMap): void;
 }

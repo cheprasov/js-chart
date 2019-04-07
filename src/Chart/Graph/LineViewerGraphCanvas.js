@@ -7,7 +7,7 @@ import type { ChartLineType } from '../Chart';
 import type { NavigationScopeType } from '../Navigation/NavigationInterface';
 import type { AxisYGeneratorInterface, AxisYItemsMapType, AxisYItemType } from './Axis/AxisYGeneratorInterface';
 import type { AxisXGeneratorInterface, AxisXItemType } from './Axis/AxisXGeneratorInterface';
-import type { GraphScopeType, LineDataMapType, LineDataType } from './LineGraphCanvas';
+import type { GraphScopeType, LineDataType } from './LineGraphCanvas';
 import type { StyleType, ViewerGraphInterface } from './ViewerGraphInterface';
 
 type AxisYDataType = {
@@ -51,6 +51,9 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
 
     _selectedIndex: null | number = null;
     _style: StyleType;
+
+    _prevAxisYDataMap: AxisYDataMapType;
+    _prevAxisXDataMap: AxisXOpacityMapType;
 
     constructor(options: OptionsType = {}) {
         super(options);
@@ -122,6 +125,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
 
     setNavigationScope(navigationScope: NavigationScopeType): void {
         this._navigationScope = navigationScope;
+        this._newScope = this._getGraphScope();
         if (this._axisYGenerator) {
             const prevAxisYItemsMap = this._axisYGenerator.getAxisYItemsMap();
             const prevAxisXMod = this._axisXGenerator.getMod();
@@ -130,7 +134,7 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
             this._updateAxisYData(prevAxisYItemsMap);
             this._updateAxisXData(prevAxisXMod);
         }
-        this._drawAnimation(this._getGraphScope());
+        this._drawAnimation();
     }
 
     _updateAxisYData(prevAxisYItemsMap: AxisYItemsMapType | null) {
@@ -185,28 +189,22 @@ export default class LineViewerGraphCanvas extends LineGraphCanvas implements Vi
         return { ...this._axisXOpacityMap };
     }
 
-    _drawAnimation(newScope: GraphScopeType) {
-        this._createAnimation();
-
-        const prevLineDataMap: LineDataMapType = this._getPrevLineDataMap();
-        const prevAxisYDataMap: AxisYDataMapType = this._getPrevAxisYDataMap();
-        const prevAxisXDataMap: AxisXOpacityMapType = this._getPrevAxisXDataMap();
-        const isNotEmptyGraph = Object.values(this._visibilityMap).some((isVisible: boolean) => isVisible);
-
-        this._animation.setOnStep((progress: ProgressType) => {
-            this._drawLinesAnimation(progress, newScope, prevLineDataMap, isNotEmptyGraph);
-            this._drawAxisYAnimation(progress, newScope, prevAxisYDataMap, isNotEmptyGraph);
-            this._drawAxisXAnimation(progress, prevAxisXDataMap);
-            this._draw();
-        });
-
+    _drawAnimation() {
+        this._prevLineDataMap = this._getPrevLineDataMap();
+        this._prevAxisYDataMap = this._getPrevAxisYDataMap();
+        this._prevAxisXDataMap = this._getPrevAxisXDataMap();
         this._animation.run();
     }
 
-    _drawAxisYAnimation(
-        progress: ProgressType, newScope: GraphScopeType, prevAxisYDataMap: AxisYDataMapType, isNotEmptyGraph: boolean,
-    ): void {
-        if (!this._axisYGenerator || !isNotEmptyGraph) {
+    _onAnimationStep(progress: ProgressType) {
+        this._drawLinesAnimation(progress, this._newScope, this._prevLineDataMap);
+        this._drawAxisYAnimation(progress, this._newScope, this._prevAxisYDataMap);
+        this._drawAxisXAnimation(progress, this._prevAxisXDataMap);
+        this._draw();
+    }
+
+    _drawAxisYAnimation(progress: ProgressType, newScope: GraphScopeType, prevAxisYDataMap: AxisYDataMapType): void {
+        if (!this._axisYGenerator || this._visibilityMap.isEmpty()) {
             return;
         }
 

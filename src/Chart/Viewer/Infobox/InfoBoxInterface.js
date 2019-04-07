@@ -1,12 +1,13 @@
 // @flow
 
+import VisibilityMap from '../../Legend/VisibilityMap/VisibilityMap';
+
 import type { RenderInterface } from '../../Base/RenderInterface';
-import type { VisibilityMapType } from '../../Legend/LegendInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 
 export interface InfoBoxInterface extends RenderInterface {
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void;
+    setVisibilityMap(visibilityMap: VisibilityMap): void;
 
     setNavigationScope(navigationScope: NavigationScopeType): void;
 

@@ -12,6 +12,7 @@ import type { LegendInterface, VisibilityMapType } from './Legend/LegendInterfac
 import type { ViewerInterface } from './Viewer/ViewerInterface';
 
 import './Chart.scss';
+import FunctionUtils from '../Utils/FunctionUtils';
 
 export type ChartLineType = {
     key: string,
@@ -82,12 +83,12 @@ export default class Chart implements ChartInterface {
 
         // this._setNavigationScopeToChartViewerDebounced = FunctionUtils.debounce((navScope: NavigationScopeType) => {
         //     this._chartViewer.setNavigationScope(navScope);
-        // }, 10);
+        // }, 50);
     }
 
     _onChangeVisibility(visibilityMap: VisibilityMapType): void {
-        this._chartNavigation.setVisibilityMap(visibilityMap);
         this._chartViewer.setVisibilityMap(visibilityMap);
+        this._chartNavigation.setVisibilityMap(visibilityMap);
     }
 
     _onChangeNavigationScope(navigationScope: NavigationScopeType): void {

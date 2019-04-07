@@ -3,17 +3,17 @@
 import BaseComponent from '../../Base/BaseComponent';
 import DocumentHelper from '../../../Utils/DocumentHelper';
 import DateUtils from '../../../Utils/DateUtils';
+import VisibilityMap from '../../Legend/VisibilityMap/VisibilityMap';
 
 import type { InfoBoxInterface } from './InfoBoxInterface';
 import type { ChartDataType, ChartLineType } from '../../Chart';
-import type { VisibilityMapType } from '../../Legend/LegendInterface';
 import type { NavigationScopeType } from '../../Navigation/NavigationInterface';
 
 import './InfoBox.scss';
 
 type OptionsType = {
     data: ChartDataType,
-    visibilityMap: VisibilityMapType,
+    visibilityMap: VisibilityMap,
     navigationScope: NavigationScopeType,
 };
 
@@ -35,7 +35,7 @@ type DivElementsMapType = {
 export default class InfoBox extends BaseComponent implements InfoBoxInterface {
 
     _data: ChartDataType;
-    _visibilityMap: VisibilityMapType;
+    _visibilityMap: VisibilityMap;
     _navigationScope: NavigationScopeType;
 
     _divElementsMap: DivElementsMapType = {};
@@ -51,12 +51,12 @@ export default class InfoBox extends BaseComponent implements InfoBoxInterface {
         this._visibilityMap = params.visibilityMap;
     }
 
-    setVisibilityMap(visibilityMap: VisibilityMapType): void {
+    setVisibilityMap(visibilityMap: VisibilityMap): void {
         this._visibilityMap = visibilityMap;
 
         DocumentHelper.update(() => {
             this._data.lines.forEach((line: ChartLineType) => {
-                const isVisible = visibilityMap[line.key];
+                const isVisible = this._visibilityMap.isVisible(line.key);
                 const divElements: DivElementsType = this._divElementsMap[line.key];
                 if (isVisible) {
                     divElements.itemElement.classList.add('visible');
