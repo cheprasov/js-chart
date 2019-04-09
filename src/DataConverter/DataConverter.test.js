@@ -1,4 +1,4 @@
-import DataConverter from './DataConverter';
+import AbstractDataConverter from '../DataConverter/DataConverter';
 import type { ChartLineType } from '../Chart/Chart';
 
 describe('DataConverter', () => {
@@ -6,18 +6,18 @@ describe('DataConverter', () => {
 
     describe('_getRandomColor', () => {
         it ('should generate color', () => {
-            expect(regExp.test(DataConverter._getRandomColor())).toBeTruthy();
-            expect(regExp.test(DataConverter._getRandomColor())).toBeTruthy();
-            expect(regExp.test(DataConverter._getRandomColor())).toBeTruthy();
-            expect(regExp.test(DataConverter._getRandomColor())).toBeTruthy();
-            expect(regExp.test(DataConverter._getRandomColor())).toBeTruthy();
+            expect(regExp.test(AbstractDataConverter._getRandomColor())).toBeTruthy();
+            expect(regExp.test(AbstractDataConverter._getRandomColor())).toBeTruthy();
+            expect(regExp.test(AbstractDataConverter._getRandomColor())).toBeTruthy();
+            expect(regExp.test(AbstractDataConverter._getRandomColor())).toBeTruthy();
+            expect(regExp.test(AbstractDataConverter._getRandomColor())).toBeTruthy();
         });
 
         it ('should generate random color', () => {
             // should be very low probability (16^6) of getting the same color, do not account it
-            const color1 = DataConverter._getRandomColor();
-            const color2 = DataConverter._getRandomColor();
-            const color3 = DataConverter._getRandomColor();
+            const color1 = AbstractDataConverter._getRandomColor();
+            const color2 = AbstractDataConverter._getRandomColor();
+            const color3 = AbstractDataConverter._getRandomColor();
             expect(color1).not.toEqual(color2);
             expect(color1).not.toEqual(color3);
             expect(color2).not.toEqual(color3);
@@ -47,7 +47,7 @@ describe('DataConverter', () => {
         };
 
         it ('should create a new line object by data', () => {
-            expect(DataConverter._createLine(rawChartData, 'foo42', [12, 14, 0, 42])).toEqual({
+            expect(AbstractDataConverter._createLine(rawChartData, 'foo42', [12, 14, 0, 42])).toEqual({
                 key: 'foo42',
                 values: [12, 14, 0, 42],
                 minValue: 0,
@@ -58,17 +58,17 @@ describe('DataConverter', () => {
         });
 
         it ('should create random color for line if color is not provided', () => {
-            const line = DataConverter._createLine(rawChartData, 'bar', [12, 14, 0, 42]);
+            const line = AbstractDataConverter._createLine(rawChartData, 'bar', [12, 14, 0, 42]);
             expect(regExp.test(line.color)).toBeTruthy();
         });
 
         it ('should mark as "unnamed" for line if name is not provided', () => {
-            const line = DataConverter._createLine(rawChartData, 'bar', [12, 14, 0, 42]);
+            const line = AbstractDataConverter._createLine(rawChartData, 'bar', [12, 14, 0, 42]);
             expect(line.name).toEqual('unnamed');
         });
 
         it ('should return line DTO object protected from changes', () => {
-            const line = DataConverter._createLine(rawChartData, 'foo42', [12, 14, 0, 42]);
+            const line = AbstractDataConverter._createLine(rawChartData, 'foo42', [12, 14, 0, 42]);
             expect(() => {
                 line.key = 'some';
             }).toThrowError();
@@ -107,7 +107,7 @@ describe('DataConverter', () => {
         };
 
         it ('should return prepared chart data', () => {
-            const preparedData = DataConverter.prepareChartData(rawChartData);
+            const preparedData = AbstractDataConverter.prepareChartData(rawChartData);
             // todo: use another way to check order of lines, not defined order for object properties
             expect(preparedData).toEqual({
                 lines: [
@@ -137,7 +137,7 @@ describe('DataConverter', () => {
         });
 
         it ('should prepared data object protected from changes', () => {
-            const preparedData = DataConverter.prepareChartData(rawChartData);
+            const preparedData = AbstractDataConverter.prepareChartData(rawChartData);
             expect(() => {
                 preparedData.x = [1, 2, 3];
             }).toThrowError();
