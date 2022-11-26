@@ -3,6 +3,12 @@
 ## About the project
 The project was created as a solution for Telegram March Coding Competition, but I decided to convert it to open source project and continue developing.
 
+### Demo
+
+Demo 1 [https://demo-chart.pages.dev/demo1](https://demo-chart.pages.dev/demo1)
+
+Demo 2 [https://demo-chart.pages.dev/demo2](https://demo-chart.pages.dev/demo2)
+
 ### Tech stack
 - JavaScript, ES6, Flow
 - Webpack, Nodejs
